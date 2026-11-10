@@ -58,14 +58,15 @@
                         <td class="px-6 py-4 text-slate-600 dark:text-slate-400">{{ $account->product->name ?? 'N/A' }}</td>
                         <td class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-200">UGX {{ number_format($account->balance, 2) }}</td>
                         <td class="px-6 py-4">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full 
-                                {{ $account->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700' }}">
+                            <span class="px-2.5 py-1 text-xs font-semibold rounded-md 
+                                {{ $account->is_active ? 'bg-[#38CE3C]/15 text-[#38CE3C] border border-[#38CE3C]/20' : 'bg-[#FF4D6B]/15 text-[#FF4D6B] border border-[#FF4D6B]/20' }}">
                                 {{ $account->is_active ? 'Active' : 'Inactive' }}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <a href="{{ route('accounts.show', $account->id) }}" class="text-slate-400 hover:text-sacco" title="View Account Details">
-                                <i data-lucide="eye" class="w-4 h-4 inline"></i>
+                            <a href="{{ route('accounts.show', $account->id) }}" class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-[#38CE3C]/15 hover:text-[#38CE3C] transition dark:bg-slate-800 dark:text-slate-300" title="View Account Details">
+                                <i data-lucide="eye" class="w-3.5 h-3.5 inline"></i>
+                                <span>View</span>
                             </a>
                         </td>
                     </tr>

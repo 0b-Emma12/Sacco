@@ -18,7 +18,7 @@
     </div>
 
     @if ($errors->any())
-        <div class="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200 text-sm">
+        <div class="bg-[#FF4D6B]/10 text-[#FF4D6B] border border-[#FF4D6B]/20 p-4 rounded-xl text-sm font-semibold">
             <ul class="list-disc pl-5">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -176,20 +176,20 @@
                             <input type="text" name="next_of_kin[{{ $index }}][national_id]" value="{{ $nok['national_id'] ?? '' }}" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:bg-slate-900 dark:border-slate-700">
                         </div>
                     </div>
-                    <button type="button" class="remove-nok mt-6 text-red-500 hover:text-red-700 transition" {{ count($noks) === 1 ? 'style=display:none' : '' }}>
+                    <button type="button" class="remove-nok mt-6 text-slate-400 hover:text-[#FF4D6B] transition" {{ count($noks) === 1 ? 'style=display:none' : '' }}>
                         <i data-lucide="x-circle" class="w-5 h-5"></i>
                     </button>
                 </div>
                 @endforeach
             </div>
-            <button type="button" id="add-nok" class="mt-4 flex items-center gap-1.5 text-sm text-sacco hover:underline">
+            <button type="button" id="add-nok" class="mt-4 flex items-center gap-1.5 text-sm font-semibold text-[#38CE3C] hover:text-[#2cb030] transition">
                 <i data-lucide="plus-circle" class="w-4 h-4"></i> Add another Next of kin
             </button>
         </div>
 
         <div class="flex justify-end gap-3">
-            <a href="{{ route('members.show', $member->id) }}" class="px-4 py-2 bg-white text-slate-700 border border-slate-300 rounded shadow-sm hover:bg-slate-50 text-sm font-medium">Cancel</a>
-            <button type="submit" class="px-4 py-2 bg-sacco text-white rounded shadow-sm hover:bg-sacco-dark text-sm font-medium">Save Changes</button>
+            <a href="{{ route('members.show', $member->id) }}" class="px-5 py-2.5 bg-white text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 text-sm font-semibold transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">Cancel</a>
+            <button type="submit" class="px-5 py-2.5 bg-[#38CE3C] hover:bg-[#2cb030] text-white rounded-xl shadow-sm text-sm font-semibold transition">Save Changes</button>
         </div>
     </form>
 </div>
@@ -246,7 +246,7 @@
                             <input type="text" name="next_of_kin[${index}][national_id]" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:bg-slate-900 dark:border-slate-700">
                         </div>
                     </div>
-                    <button type="button" class="remove-nok mt-6 text-red-500 hover:text-red-700 transition">
+                    <button type="button" class="remove-nok mt-6 text-slate-400 hover:text-[#FF4D6B] transition">
                         <i data-lucide="x-circle" class="w-5 h-5"></i>
                     </button>
                 </div>

@@ -14,7 +14,7 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-900 dark:border-slate-800 p-6 md:p-8">
         
         @if ($errors->any())
-            <div class="bg-rose-50 text-rose-600 p-4 rounded-md mb-6 text-sm">
+            <div class="bg-[#FF4D6B]/10 text-[#FF4D6B] border border-[#FF4D6B]/20 p-4 rounded-xl mb-6 text-sm font-semibold">
                 <ul class="list-disc pl-5">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -56,12 +56,12 @@
                     </div>
                 </div>
 
-                <div class="mt-6 p-4 bg-emerald-50 rounded-lg border border-emerald-100 flex items-center justify-between">
+                <div class="mt-6 p-4 bg-[#38CE3C]/10 rounded-xl border border-[#38CE3C]/20 flex items-center justify-between">
                     <div>
-                        <h4 class="text-sm font-bold text-emerald-800">Expected Total Repayment</h4>
-                        <p class="text-xs text-emerald-600 mt-1">Principal + Total Interest over the full term</p>
+                        <h4 class="text-sm font-bold text-[#38CE3C]">Expected Total Repayment</h4>
+                        <p class="text-xs text-[#38CE3C]/70 mt-1">Principal + Total Interest over the full term</p>
                     </div>
-                    <div class="text-xl font-black text-emerald-700" id="total_repayment_display">
+                    <div class="text-xl font-black text-[#38CE3C]" id="total_repayment_display">
                         UGX 0
                     </div>
                 </div>

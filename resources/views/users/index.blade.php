@@ -10,9 +10,9 @@
             <h1 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Staff / Users</h1>
         </div>
         <div class="flex items-center gap-3">
-            <button class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-sacco border border-sacco rounded hover:bg-sacco-dark transition">
+            <a href="{{ route('users.create') }}" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#38CE3C] border border-[#38CE3C] rounded-xl hover:bg-[#2cb030] transition shadow-sm">
                 <i data-lucide="user-plus" class="w-4 h-4"></i> Create User
-            </button>
+            </a>
         </div>
     </div>
 
@@ -21,7 +21,7 @@
             <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">System Users</h3>
             <div class="relative">
                 <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
-                <input type="text" placeholder="Search username..." class="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-sacco/50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200">
+                <input type="text" placeholder="Search username..." class="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200">
             </div>
         </div>
         
@@ -29,7 +29,7 @@
             <table class="w-full text-left text-sm whitespace-nowrap">
                 <thead>
                     <tr class="bg-slate-50 dark:bg-slate-950/50 text-slate-500 text-xs uppercase tracking-wider">
-                        <th class="px-6 py-4 font-semibold">Image</th>
+                        <th class="px-6 py-4 font-semibold">Avatar</th>
                         <th class="px-6 py-4 font-semibold">User Name</th>
                         <th class="px-6 py-4 font-semibold">Email</th>
                         <th class="px-6 py-4 font-semibold">Role</th>
@@ -41,9 +41,9 @@
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition">
                         <td class="px-6 py-4">
                             @if($user->profile_image)
-                                <img src="{{ $user->profile_image }}" alt="{{ $user->username }}" class="w-10 h-10 rounded-full object-cover">
+                                <img src="{{ $user->profile_image }}" alt="{{ $user->username }}" class="w-10 h-10 rounded-full object-cover border-2 border-[#38CE3C]/30">
                             @else
-                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[#38CE3C]/15 text-[#38CE3C] font-bold text-sm">
                                     {{ strtoupper(substr($user->username ?? 'U', 0, 1)) }}
                                 </div>
                             @endif
@@ -61,18 +61,33 @@
                                     'AC' => 'Accountant',
                                     default => $user->role
                                 };
+                                $roleClass = match($user->role) {
+                                    'AD' => 'bg-[#FF4D6B]/15 text-[#FF4D6B] border border-[#FF4D6B]/20',
+                                    'MA' => 'bg-[#8E32E9]/15 text-[#8E32E9] border border-[#8E32E9]/20',
+                                    'LO' => 'bg-[#FFDE73]/30 text-amber-700 border border-amber-300/30',
+                                    'AC' => 'bg-[#38CE3C]/15 text-[#38CE3C] border border-[#38CE3C]/20',
+                                    default => 'bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                                };
                             @endphp
-                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                            <span class="px-2.5 py-1 text-xs font-semibold rounded-md {{ $roleClass }}">
                                 {{ $roleDisplay }}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <button class="text-slate-400 hover:text-sacco"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                            <a href="{{ route('users.show', $user->id) }}" class="text-slate-400 hover:text-[#38CE3C] transition"><i data-lucide="eye" class="w-4 h-4 inline"></i></a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-8 text-center text-slate-500">No users found in the database.</td>
+                        <td colspan="5" class="px-6 py-12">
+                            <div class="flex flex-col items-center justify-center text-center">
+                                <div class="h-14 w-14 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mb-3 dark:bg-slate-800/50">
+                                    <i data-lucide="users" class="w-7 h-7"></i>
+                                </div>
+                                <h4 class="text-slate-700 dark:text-slate-200 font-bold mb-1">No users found</h4>
+                                <p class="text-slate-500 text-xs">Create system users to manage this SACCO.</p>
+                            </div>
+                        </td>
                     </tr>
                     @endforelse
                 </tbody>

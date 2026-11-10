@@ -9,13 +9,13 @@
             <h1 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Expense Details</h1>
         </div>
         <div class="flex gap-2">
-            <a href="{{ route('expenses.index') }}" class="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded hover:bg-slate-200 transition">← Back to Expenses</a>
+            <a href="{{ route('expenses.index') }}" class="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition">← Back to Expenses</a>
         </div>
     </div>
 
     @if(session('success'))
-        <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded relative" role="alert">
-            <span class="block sm:inline">{{ session('success') }}</span>
+        <div class="bg-[#38CE3C]/10 border border-[#38CE3C]/20 text-[#38CE3C] px-4 py-3 rounded-xl font-semibold text-sm" role="alert">
+            {{ session('success') }}
         </div>
     @endif
 
@@ -24,11 +24,18 @@
             <div class="flex justify-between items-start mb-6">
                 <div>
                     <h2 class="text-xl font-bold text-slate-800 dark:text-slate-100">#{{ str_pad($expense->id, 4, '0', STR_PAD_LEFT) }}</h2>
-                    <p class="text-sm text-slate-500">{{ $expense->description }}</p>
+                    <p class="text-sm text-slate-500 mt-1">{{ $expense->description }}</p>
                 </div>
                 <div>
-                    <span class="px-3 py-1.5 text-sm font-medium rounded-full 
-                        {{ strtolower($expense->status) === 'approved' ? 'bg-emerald-100 text-emerald-700' : (strtolower($expense->status) === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700') }}">
+                    @php
+                        $st = strtolower($expense->status);
+                        $badgeClass = $st === 'approved'
+                            ? 'bg-[#38CE3C]/15 text-[#38CE3C] border border-[#38CE3C]/20'
+                            : ($st === 'rejected'
+                                ? 'bg-[#FF4D6B]/15 text-[#FF4D6B] border border-[#FF4D6B]/20'
+                                : 'bg-[#FFDE73]/30 text-amber-700 dark:text-amber-300 border border-amber-300/30');
+                    @endphp
+                    <span class="px-3 py-1.5 text-sm font-semibold rounded-xl {{ $badgeClass }}">
                         {{ ucfirst($expense->status) }}
                     </span>
                 </div>
@@ -38,7 +45,7 @@
                 <div>
                     <div class="mb-4">
                         <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Amount</span>
-                        <span class="text-lg font-semibold text-slate-800 dark:text-slate-200">{{ number_format($expense->amount, 2) }}</span>
+                        <span class="text-lg font-bold text-slate-800 dark:text-slate-200">UGX {{ number_format($expense->amount, 2) }}</span>
                     </div>
                     <div class="mb-4">
                         <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Category</span>
@@ -66,7 +73,7 @@
                 </div>
             </div>
 
-            <div class="border-t border-slate-100 dark:border-slate-800 pt-6 flex justify-end gap-3">
+            <div class="border-t border-slate-100 dark:border-slate-800 pt-6 flex flex-wrap justify-end gap-3">
                 @if($expense->status === 'pending')
                 <form action="{{ route('expenses.update', $expense->id) }}" method="POST" class="inline">
                     @csrf
@@ -75,7 +82,7 @@
                     <input type="hidden" name="amount" value="{{ $expense->amount }}">
                     <input type="hidden" name="category" value="{{ $expense->category }}">
                     <input type="hidden" name="status" value="rejected">
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-rose-600 bg-rose-50 border border-rose-200 rounded hover:bg-rose-100 transition">Reject</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-semibold text-[#FF4D6B] bg-[#FF4D6B]/10 border border-[#FF4D6B]/20 rounded-xl hover:bg-[#FF4D6B]/20 transition">Reject</button>
                 </form>
 
                 <form action="{{ route('expenses.update', $expense->id) }}" method="POST" class="inline">
@@ -85,13 +92,13 @@
                     <input type="hidden" name="amount" value="{{ $expense->amount }}">
                     <input type="hidden" name="category" value="{{ $expense->category }}">
                     <input type="hidden" name="status" value="approved">
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-sacco rounded hover:bg-sacco-dark transition">Approve</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-semibold text-white bg-[#38CE3C] rounded-xl hover:bg-[#2cb030] transition shadow-sm">Approve</button>
                 </form>
                 @endif
                 <form action="{{ route('expenses.destroy', $expense->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this expense?');">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-rose-600 hover:text-rose-800 transition">Delete Expense</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-semibold text-[#FF4D6B] hover:text-[#FF4D6B]/80 transition">Delete Expense</button>
                 </form>
             </div>
         </div>

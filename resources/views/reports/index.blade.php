@@ -9,7 +9,7 @@
           <h1 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Financial Reports</h1>
       </div>
       <div>
-          <button onclick="window.print()" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-50 transition print-hidden dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
+          <button onclick="window.print()" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition print-hidden dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
               <i data-lucide="printer" class="w-4 h-4"></i> Print Report
           </button>
       </div>
@@ -20,13 +20,13 @@
       <form method="GET" action="{{ route('reports.index') }}" class="flex flex-col sm:flex-row gap-4 items-end">
           <div class="flex-1 w-full">
               <label class="block text-xs font-bold text-slate-500 mb-1">Start Date</label>
-              <input type="date" name="start_date" value="{{ $startDate }}" class="w-full h-10 px-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-sacco outline-none text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100">
+              <input type="date" name="start_date" value="{{ $startDate }}" class="w-full h-10 px-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] outline-none text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 transition">
           </div>
           <div class="flex-1 w-full">
               <label class="block text-xs font-bold text-slate-500 mb-1">End Date</label>
-              <input type="date" name="end_date" value="{{ $endDate }}" class="w-full h-10 px-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-sacco outline-none text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100">
+              <input type="date" name="end_date" value="{{ $endDate }}" class="w-full h-10 px-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] outline-none text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 transition">
           </div>
-          <button type="submit" class="h-10 px-6 rounded-lg bg-sacco hover:bg-sacco-dark text-white font-medium text-sm transition flex items-center gap-2 w-full sm:w-auto justify-center">
+          <button type="submit" class="h-10 px-6 rounded-xl bg-[#38CE3C] hover:bg-[#2cb030] text-white font-semibold text-sm transition flex items-center gap-2 w-full sm:w-auto justify-center shadow-sm">
               <i data-lucide="filter" class="w-4 h-4"></i> Filter
           </button>
       </form>
@@ -39,24 +39,36 @@
   </div>
 
   <!-- KPIs -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 dark:bg-slate-900 dark:border-slate-800">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 dark:bg-slate-900 dark:border-slate-800">
+          <div class="h-9 w-9 rounded-xl bg-[#38CE3C]/15 flex items-center justify-center mb-3">
+              <i data-lucide="arrow-down-to-line" class="w-4 h-4 text-[#38CE3C]"></i>
+          </div>
           <div class="text-xs font-bold tracking-wider text-slate-400 uppercase">Total Deposits</div>
-          <h3 class="text-2xl font-bold text-emerald-600 mt-2">UGX {{ number_format($totalDeposits) }}</h3>
+          <h3 class="text-2xl font-bold text-[#38CE3C] mt-1">UGX {{ number_format($totalDeposits) }}</h3>
       </div>
-      <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 dark:bg-slate-900 dark:border-slate-800">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 dark:bg-slate-900 dark:border-slate-800">
+          <div class="h-9 w-9 rounded-xl bg-[#FF4D6B]/15 flex items-center justify-center mb-3">
+              <i data-lucide="arrow-up-from-line" class="w-4 h-4 text-[#FF4D6B]"></i>
+          </div>
           <div class="text-xs font-bold tracking-wider text-slate-400 uppercase">Total Withdrawals</div>
-          <h3 class="text-2xl font-bold text-rose-600 mt-2">UGX {{ number_format($totalWithdrawals) }}</h3>
+          <h3 class="text-2xl font-bold text-[#FF4D6B] mt-1">UGX {{ number_format($totalWithdrawals) }}</h3>
       </div>
-      <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 dark:bg-slate-900 dark:border-slate-800">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 dark:bg-slate-900 dark:border-slate-800">
+          <div class="h-9 w-9 rounded-xl {{ $netCashFlow >= 0 ? 'bg-[#38CE3C]/15' : 'bg-[#FF4D6B]/15' }} flex items-center justify-center mb-3">
+              <i data-lucide="{{ $netCashFlow >= 0 ? 'trending-up' : 'trending-down' }}" class="w-4 h-4 {{ $netCashFlow >= 0 ? 'text-[#38CE3C]' : 'text-[#FF4D6B]' }}"></i>
+          </div>
           <div class="text-xs font-bold tracking-wider text-slate-400 uppercase">Net Cash Flow</div>
-          <h3 class="text-2xl font-bold {{ $netCashFlow >= 0 ? 'text-emerald-600' : 'text-rose-600' }} mt-2">
+          <h3 class="text-2xl font-bold {{ $netCashFlow >= 0 ? 'text-[#38CE3C]' : 'text-[#FF4D6B]' }} mt-1">
               UGX {{ number_format($netCashFlow) }}
           </h3>
       </div>
-      <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 dark:bg-slate-900 dark:border-slate-800">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 dark:bg-slate-900 dark:border-slate-800">
+          <div class="h-9 w-9 rounded-xl bg-[#8E32E9]/15 flex items-center justify-center mb-3">
+              <i data-lucide="credit-card" class="w-4 h-4 text-[#8E32E9]"></i>
+          </div>
           <div class="text-xs font-bold tracking-wider text-slate-400 uppercase">Loans Disbursed</div>
-          <h3 class="text-2xl font-bold text-indigo-600 mt-2">UGX {{ number_format($totalLoansDisbursed) }}</h3>
+          <h3 class="text-2xl font-bold text-[#8E32E9] mt-1">UGX {{ number_format($totalLoansDisbursed) }}</h3>
       </div>
   </div>
 
@@ -64,7 +76,7 @@
   <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden dark:bg-slate-900 dark:border-slate-800">
       <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
           <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">Transaction Ledger</h3>
-          <button class="text-sacco text-sm font-medium hover:underline print-hidden" onclick="exportTableToCSV('transactions_report.csv')">Export CSV</button>
+          <button class="text-[#38CE3C] text-sm font-semibold hover:underline print-hidden" onclick="exportTableToCSV('transactions_report.csv')">Export CSV</button>
       </div>
       <div class="overflow-x-auto w-full">
           <table class="w-full text-left text-sm whitespace-nowrap">
@@ -80,17 +92,17 @@
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                   @forelse($transactions as $tx)
                   <tr class="hover:bg-slate-50/50 transition">
-                      <td class="px-6 py-4 text-slate-600">{{ $tx->created_at->format('Y-m-d H:i') }}</td>
-                      <td class="px-6 py-4 font-medium">{{ $tx->reference }}</td>
-                      <td class="px-6 py-4">{{ $tx->account_number }}</td>
+                      <td class="px-6 py-4 text-slate-600 dark:text-slate-400">{{ $tx->created_at->format('Y-m-d H:i') }}</td>
+                      <td class="px-6 py-4 font-medium text-slate-800 dark:text-slate-200">{{ $tx->reference }}</td>
+                      <td class="px-6 py-4 text-slate-600 dark:text-slate-400">{{ $tx->account_number }}</td>
                       <td class="px-6 py-4">
                           @if($tx->transaction_type === 'deposit')
-                              <span class="px-2 py-1 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Deposit</span>
+                              <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-[#38CE3C]/15 text-[#38CE3C] border border-[#38CE3C]/20">Deposit</span>
                           @else
-                              <span class="px-2 py-1 text-xs font-medium rounded-full bg-rose-50 text-rose-700 border border-rose-200">Withdrawal</span>
+                              <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-[#FF4D6B]/15 text-[#FF4D6B] border border-[#FF4D6B]/20">Withdrawal</span>
                           @endif
                       </td>
-                      <td class="px-6 py-4 font-semibold text-right {{ $tx->transaction_type === 'deposit' ? 'text-emerald-600' : 'text-rose-600' }}">
+                      <td class="px-6 py-4 font-semibold text-right {{ $tx->transaction_type === 'deposit' ? 'text-[#38CE3C]' : 'text-[#FF4D6B]' }}">
                           {{ $tx->transaction_type === 'deposit' ? '+' : '-' }} UGX {{ number_format($tx->amount) }}
                       </td>
                   </tr>

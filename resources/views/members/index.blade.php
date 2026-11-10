@@ -62,13 +62,32 @@
                         <td class="px-6 py-4 text-slate-600 dark:text-slate-400">{{ $member->national_id }}</td>
                         <td class="px-6 py-4 text-slate-600 dark:text-slate-400">{{ $member->phone_number }}</td>
                         <td class="px-6 py-4">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full 
-                                {{ strtolower($member->status) === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700' }}">
-                                {{ $member->status }}
-                            </span>
+                            @php
+                                $st = strtolower($member->status);
+                            @endphp
+                            @if($st === 'active')
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-[#38CE3C]/15 text-[#38CE3C] border border-[#38CE3C]/20">
+                                    Active
+                                </span>
+                            @elseif(in_array($st, ['exited', 'suspended', 'closed']))
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-[#FF4D6B]/15 text-[#FF4D6B] border border-[#FF4D6B]/20">
+                                    {{ ucfirst($member->status) }}
+                                </span>
+                            @elseif(in_array($st, ['pending', 'incubating']))
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-[#FFDE73]/30 text-amber-700 dark:text-amber-300 border border-amber-300/30">
+                                    {{ ucfirst($member->status) }}
+                                </span>
+                            @else
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                    {{ ucfirst($member->status) }}
+                                </span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <a href="{{ route('members.show', $member->id) }}" class="text-slate-400 hover:text-sacco"><i data-lucide="eye" class="w-4 h-4"></i></a>
+                            <a href="{{ route('members.show', $member->id) }}" class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 hover:bg-[#38CE3C]/15 hover:text-[#38CE3C] transition dark:bg-slate-800 dark:text-slate-300">
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                <span>View</span>
+                            </a>
                         </td>
                     </tr>
                     @empty

@@ -14,7 +14,7 @@
 
     <!-- DATA TABLE -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 text-center dark:bg-slate-900 dark:border-slate-800">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-rose-50 text-rose-500 mb-4 dark:bg-rose-500/10">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#FF4D6B]/15 text-[#FF4D6B] mb-4 dark:bg-[#FF4D6B]/20">
             <i data-lucide="alert-triangle" class="w-8 h-8"></i>
         </div>
         <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">No Defaulted Instalments</h3>

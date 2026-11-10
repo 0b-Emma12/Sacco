@@ -8,11 +8,11 @@
             <p class="text-sm text-slate-500 mt-1">View all double-entry accounting records across the SACCO.</p>
         </div>
         <div class="flex gap-3">
-            <a href="{{ route('accounting.create') }}" class="flex items-center gap-2 px-4 py-2 bg-sacco text-white rounded-lg hover:bg-sacco-dark transition font-medium">
+            <a href="{{ route('accounting.create') }}" class="flex items-center gap-2 px-4 py-2 bg-[#38CE3C] hover:bg-[#2cb030] text-white rounded-xl shadow-xs transition font-semibold text-sm">
                 <i data-lucide="plus" class="w-4 h-4"></i>
                 New Entry
             </a>
-            <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition font-medium dark:bg-indigo-500/20 dark:text-indigo-300 print-hidden">
+            <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 bg-[#8E32E9]/10 text-[#8E32E9] rounded-xl hover:bg-[#8E32E9]/20 transition font-semibold text-sm dark:bg-[#8E32E9]/20 dark:text-[#8E32E9] print-hidden">
                 <i data-lucide="printer" class="w-4 h-4"></i>
                 Print GL
             </button>
@@ -20,21 +20,21 @@
     </div>
 
     @if(session('success'))
-        <div class="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800 print-hidden" role="alert">
+        <div class="p-4 mb-4 text-sm font-semibold text-[#38CE3C] bg-[#38CE3C]/10 border border-[#38CE3C]/20 rounded-xl print-hidden" role="alert">
             {{ session('success') }}
         </div>
     @endif
 
     <!-- Trial Balance Summary -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden dark:bg-slate-900 dark:border-slate-800 mb-2">
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden dark:bg-[#181824] dark:border-[#272738] mb-2">
         <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
             <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Trial Balance Snapshot</h3>
-            <div class="text-sm px-3 py-1 bg-slate-100 text-slate-600 rounded-full dark:bg-slate-800 dark:text-slate-300">
+            <div class="text-xs px-3 py-1 bg-slate-100 text-slate-600 rounded-full dark:bg-slate-800 dark:text-slate-300 font-semibold">
                 Live Status: 
                 @if(abs($totalDebit - $totalCredit) < 0.01)
-                    <span class="text-emerald-600 font-bold ml-1">Balanced</span>
+                    <span class="text-[#38CE3C] font-bold ml-1">Balanced</span>
                 @else
-                    <span class="text-rose-600 font-bold ml-1">Unbalanced</span>
+                    <span class="text-[#FF4D6B] font-bold ml-1">Unbalanced</span>
                 @endif
             </div>
         </div>
@@ -55,10 +55,10 @@
                         <td class="px-6 py-3 text-slate-600 font-medium">{{ $account['code'] }}</td>
                         <td class="px-6 py-3 text-slate-800 dark:text-slate-200">{{ $account['name'] }}</td>
                         <td class="px-6 py-3 text-slate-500">{{ $account['type'] }}</td>
-                        <td class="px-6 py-3 text-right font-medium text-emerald-600">
+                        <td class="px-6 py-3 text-right font-medium text-[#38CE3C]">
                             {{ $account['debit_total'] > 0 ? number_format($account['debit_total'], 2) : '-' }}
                         </td>
-                        <td class="px-6 py-3 text-right font-medium text-rose-600">
+                        <td class="px-6 py-3 text-right font-medium text-[#FF4D6B]">
                             {{ $account['credit_total'] > 0 ? number_format($account['credit_total'], 2) : '-' }}
                         </td>
                     </tr>
@@ -72,8 +72,8 @@
                 <tfoot class="bg-slate-50 dark:bg-slate-950/50 border-t-2 border-slate-200 dark:border-slate-700">
                     <tr>
                         <td colspan="3" class="px-6 py-4 font-bold text-right text-slate-700 dark:text-slate-300">TOTALS:</td>
-                        <td class="px-6 py-4 font-bold text-right text-emerald-700">UGX {{ number_format($totalDebit, 2) }}</td>
-                        <td class="px-6 py-4 font-bold text-right text-rose-700">UGX {{ number_format($totalCredit, 2) }}</td>
+                        <td class="px-6 py-4 font-bold text-right text-[#38CE3C]">UGX {{ number_format($totalDebit, 2) }}</td>
+                        <td class="px-6 py-4 font-bold text-right text-[#FF4D6B]">UGX {{ number_format($totalCredit, 2) }}</td>
                     </tr>
                 </tfoot>
                 @endif
@@ -126,10 +126,10 @@
                                         </span>
                                         <span class="text-sm text-slate-600 dark:text-slate-300">{{ $line->account_name }}</span>
                                     </td>
-                                    <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-medium text-emerald-600">
+                                    <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-medium text-[#38CE3C]">
                                         {{ $line->debit > 0 ? number_format($line->debit, 2) : '-' }}
                                     </td>
-                                    <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-medium text-rose-600">
+                                    <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-medium text-[#FF4D6B]">
                                         {{ $line->credit > 0 ? number_format($line->credit, 2) : '-' }}
                                     </td>
                                     @if($index === 0)

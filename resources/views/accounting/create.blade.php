@@ -16,7 +16,7 @@
     </div>
 
     @if($errors->any())
-        <div class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800" role="alert">
+        <div class="p-4 mb-4 text-sm text-[#FF4D6B] bg-[#FF4D6B]/10 border border-[#FF4D6B]/20 rounded-xl font-semibold" role="alert">
             <ul class="list-disc pl-5">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -32,15 +32,15 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Reference</label>
-                    <input type="text" name="reference" value="{{ old('reference') }}" required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                    <input type="text" name="reference" value="{{ old('reference') }}" required class="w-full px-3 py-2 border border-slate-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] sm:text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white transition">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Date</label>
-                    <input type="datetime-local" name="posted_at" value="{{ old('posted_at', now()->format('Y-m-d\TH:i')) }}" required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                    <input type="datetime-local" name="posted_at" value="{{ old('posted_at', now()->format('Y-m-d\TH:i')) }}" required class="w-full px-3 py-2 border border-slate-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] sm:text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white transition">
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description</label>
-                    <textarea name="description" rows="2" required class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white">{{ old('description') }}</textarea>
+                    <textarea name="description" rows="2" required class="w-full px-3 py-2 border border-slate-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] sm:text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white transition">{{ old('description') }}</textarea>
                 </div>
             </div>
 
@@ -61,7 +61,7 @@
                             @for ($i = 0; $i < max(2, count(old('lines', [1,2]))); $i++)
                                 <tr class="border-b border-slate-100 dark:border-slate-800">
                                     <td class="px-4 py-2">
-                                        <select name="lines[{{ $i }}][account_code]" required class="w-full px-2 py-1 border border-slate-300 rounded-md text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                                        <select name="lines[{{ $i }}][account_code]" required class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-sm dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] transition">
                                             <option value="">Select Account...</option>
                                             @foreach($accounts as $account)
                                                 <option value="{{ $account->code }}" {{ old("lines.{$i}.account_code") == $account->code ? 'selected' : '' }}>
@@ -71,13 +71,13 @@
                                         </select>
                                     </td>
                                     <td class="px-4 py-2">
-                                        <input type="number" name="lines[{{ $i }}][debit]" value="{{ old("lines.{$i}.debit", 0) }}" min="0" step="0.01" class="w-full px-2 py-1 border border-slate-300 rounded-md text-sm debit-input dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                                        <input type="number" name="lines[{{ $i }}][debit]" value="{{ old("lines.{$i}.debit", 0) }}" min="0" step="0.01" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-sm debit-input dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] transition">
                                     </td>
                                     <td class="px-4 py-2">
-                                        <input type="number" name="lines[{{ $i }}][credit]" value="{{ old("lines.{$i}.credit", 0) }}" min="0" step="0.01" class="w-full px-2 py-1 border border-slate-300 rounded-md text-sm credit-input dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                                        <input type="number" name="lines[{{ $i }}][credit]" value="{{ old("lines.{$i}.credit", 0) }}" min="0" step="0.01" class="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-sm credit-input dark:bg-slate-800 dark:border-slate-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] transition">
                                     </td>
                                     <td class="px-4 py-2 text-center">
-                                        <button type="button" class="text-red-500 hover:text-red-700 remove-line"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                        <button type="button" class="text-slate-400 hover:text-[#FF4D6B] transition remove-line"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                     </td>
                                 </tr>
                             @endfor
@@ -92,16 +92,16 @@
                         </tfoot>
                     </table>
                 </div>
-                <button type="button" id="addLine" class="mt-4 flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
+                <button type="button" id="addLine" class="mt-4 flex items-center gap-1.5 text-xs font-bold text-[#8E32E9] hover:text-[#7822d6] dark:text-[#8E32E9] transition">
                     <i data-lucide="plus" class="w-4 h-4"></i> Add Line Item
                 </button>
             </div>
 
             <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <a href="{{ route('accounting.index') }}" class="px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700">
+                <a href="{{ route('accounting.index') }}" class="px-5 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
                     Cancel
                 </a>
-                <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-sacco hover:bg-sacco-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sacco">
+                <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-[#38CE3C] hover:bg-[#2cb030] shadow-md shadow-[#38CE3C]/20 transition">
                     Save Journal Entry
                 </button>
             </div>

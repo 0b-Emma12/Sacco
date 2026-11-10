@@ -17,7 +17,7 @@
             @if(strtolower($member->status) !== 'exited')
             <form method="POST" action="{{ route('members.exitSacco', $member->id) }}" onsubmit="return confirm('Are you sure you want to exit this member from the SACCO? This will liquidate their savings and share capital.');">
                 @csrf
-                <button type="submit" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-slate-800 border border-slate-800 rounded hover:bg-slate-900 transition">
+                <button type="submit" class="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-white bg-[#181824] rounded-xl hover:bg-slate-800 transition shadow-sm">
                     <i data-lucide="user-x" class="w-4 h-4"></i> Exit SACCO
                 </button>
             </form>
@@ -25,7 +25,7 @@
             <form method="POST" action="{{ route('members.destroy', $member->id) }}" onsubmit="return confirm('WARNING: This will permanently delete the member and ALL their associated accounts, loans, and transaction history. Are you sure?');">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-rose-600 border border-rose-600 rounded hover:bg-rose-700 transition">
+                <button type="submit" class="flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-[#FF4D6B] bg-[#FF4D6B]/15 border border-[#FF4D6B]/20 rounded-xl hover:bg-[#FF4D6B]/25 transition">
                     <i data-lucide="trash-2" class="w-4 h-4"></i> Delete Member
                 </button>
             </form>
@@ -33,12 +33,12 @@
     </div>
 
     @if(session('success'))
-        <div class="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800" role="alert">
+        <div class="p-4 mb-4 text-sm text-[#38CE3C] font-semibold bg-[#38CE3C]/10 border border-[#38CE3C]/20 rounded-xl" role="alert">
             {{ session('success') }}
         </div>
     @endif
     @if($errors->any())
-        <div class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800" role="alert">
+        <div class="p-4 mb-4 text-sm text-[#FF4D6B] bg-[#FF4D6B]/10 border border-[#FF4D6B]/20 rounded-xl" role="alert">
             <ul class="list-disc pl-5">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -58,8 +58,15 @@
                     <div class="font-medium text-sm">Membership No: <span class="font-light block text-slate-600 dark:text-slate-400">{{ $member->membership_number }}</span></div>
                     <div class="font-medium text-sm flex items-center justify-between">
                         Status: 
-                        <span class="font-medium rounded-full px-2 py-0.5 text-xs text-center
-                            {{ strtolower($member->status) === 'active' ? 'bg-emerald-100 text-emerald-700' : (strtolower($member->status) === 'exited' ? 'bg-slate-100 text-slate-700' : 'bg-red-100 text-red-700') }}">
+                        @php
+                            $st = strtolower($member->status);
+                            $sBadge = $st === 'active'
+                                ? 'bg-[#38CE3C]/15 text-[#38CE3C] border border-[#38CE3C]/20'
+                                : ($st === 'exited' || $st === 'closed'
+                                    ? 'bg-[#FF4D6B]/15 text-[#FF4D6B] border border-[#FF4D6B]/20'
+                                    : 'bg-[#FFDE73]/30 text-amber-700 border border-amber-300/30');
+                        @endphp
+                        <span class="font-semibold rounded-full px-2.5 py-0.5 text-xs text-center {{ $sBadge }}">
                             {{ $member->status }}
                         </span>
                     </div>
@@ -93,8 +100,8 @@
                     <div class="pt-2">
                         <form method="POST" action="{{ route('members.buyShares', $member->id) }}" class="flex flex-col gap-2">
                             @csrf
-                            <input type="number" name="shares_amount" placeholder="Amount (UGX)" class="w-full h-9 px-3 rounded text-sm border border-slate-200 focus:outline-none focus:ring-1 focus:ring-sacco" required min="1000">
-                            <button type="submit" class="w-full py-2 bg-slate-800 text-white rounded text-sm font-medium hover:bg-slate-700 transition">Buy Shares</button>
+                            <input type="number" name="shares_amount" placeholder="Amount (UGX)" class="w-full h-9 px-3 rounded-xl text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] transition" required min="1000">
+                            <button type="submit" class="w-full py-2 bg-[#38CE3C] text-white rounded-xl text-sm font-semibold hover:bg-[#2cb030] transition shadow-sm">Buy Shares</button>
                         </form>
                     </div>
                     @endif
@@ -148,7 +155,7 @@
             <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-slate-800 dark:bg-slate-950">
                 <div class="p-5 flex flex-row items-center justify-between border-b border-slate-100 dark:border-slate-800">
                     <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Accounts</h3>
-                    <button x-data @click="$dispatch('open-account-modal')" class="px-3 py-1.5 text-sm font-medium text-white bg-slate-800 border border-slate-800 rounded hover:bg-slate-900 transition dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600 flex items-center gap-1">
+                    <button x-data @click="$dispatch('open-account-modal')" class="px-3 py-1.5 text-sm font-semibold text-white bg-[#38CE3C] border border-[#38CE3C] rounded-xl hover:bg-[#2cb030] transition shadow-sm flex items-center gap-1">
                         <i data-lucide="plus" class="w-4 h-4"></i> Open Account
                     </button>
                 </div>
@@ -169,29 +176,29 @@
                                 <td class="px-6 py-4 font-medium text-sacco hover:underline cursor-pointer">
                                     {{ $account->account_number }}
                                     @if($account->is_default)
-                                        <span class="ml-2 px-2 py-0.5 text-[10px] font-bold tracking-wider text-emerald-700 bg-emerald-100 rounded-full uppercase">Default</span>
+                                        <span class="ml-2 px-2 py-0.5 text-[10px] font-bold tracking-wider text-[#38CE3C] bg-[#38CE3C]/15 rounded-md uppercase">Default</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">
                                     {{ $account->product->name ?? 'N/A' }}
                                     @if($account->term_months)
-                                        <div class="text-xs text-slate-500 mt-1">{{ $account->term_months }} Months (Matures {{ \Carbon\Carbon::parse($account->maturity_date)->format('M d, Y') }})</div>
+                                         <div class="text-xs text-slate-500 mt-1">{{ $account->term_months }} Months (Matures {{ \Carbon\Carbon::parse($account->maturity_date)->format('M d, Y') }})</div>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">UGX {{ number_format($account->balance, 2) }}</td>
                                 <td class="px-6 py-4">
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full {{ $account->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">
+                                    <span class="px-2.5 py-1 text-xs font-semibold rounded-md {{ $account->is_active ? 'bg-[#38CE3C]/15 text-[#38CE3C] border border-[#38CE3C]/20' : 'bg-[#FF4D6B]/15 text-[#FF4D6B] border border-[#FF4D6B]/20' }}">
                                         {{ $account->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 flex gap-4">
-                                    <a href="{{ route('accounts.show', $account->id) }}" class="text-slate-600 hover:text-sacco dark:text-slate-400" title="View Account">
+                                    <a href="{{ route('accounts.show', $account->id) }}" class="text-slate-400 hover:text-[#38CE3C] transition" title="View Account">
                                         <i data-lucide="eye" class="w-4 h-4"></i>
                                     </a>
                                     <form action="{{ route('accounts.destroy', $account->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this account?');" class="inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-slate-600 hover:text-rose-500 dark:text-slate-400" title="Delete Account">
+                                        <button type="submit" class="text-slate-400 hover:text-[#FF4D6B] transition" title="Delete Account">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                                         </button>
                                     </form>
@@ -269,7 +276,15 @@
                                 <td class="px-6 py-4">UGX {{ number_format($loan->principal_amount, 2) }}</td>
                                 <td class="px-6 py-4">{{ $loan->created_at->format('M d, Y') }}</td>
                                 <td class="px-6 py-4">
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full {{ strtolower($loan->status) === 'rejected' ? 'bg-red-100 text-red-800' : (in_array(strtolower($loan->status), ['approved', 'disbursed']) ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-800') }}">
+                                    @php
+                                        $lStatusClass = match(strtolower($loan->status)) {
+                                            'approved', 'disbursed' => 'bg-[#38CE3C]/15 text-[#38CE3C] border border-[#38CE3C]/20',
+                                            'rejected', 'defaulted' => 'bg-[#FF4D6B]/15 text-[#FF4D6B] border border-[#FF4D6B]/20',
+                                            'under_review', 'submitted' => 'bg-[#FFDE73]/30 text-amber-700 border border-amber-300/30',
+                                            default => 'bg-[#8E32E9]/15 text-[#8E32E9] border border-[#8E32E9]/20'
+                                        };
+                                    @endphp
+                                    <span class="px-2.5 py-1 text-xs font-semibold rounded-md {{ $lStatusClass }}">
                                         {{ ucfirst($loan->status) }}
                                     </span>
                                 </td>
@@ -343,10 +358,10 @@
                 </div>
 
                 <div class="mt-6 sm:flex sm:flex-row-reverse gap-2">
-                    <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-slate-800 border border-transparent rounded-md shadow-sm hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-800 mb-2 sm:mb-0">
+                    <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center px-5 py-2.5 text-sm font-semibold text-white bg-[#38CE3C] border border-[#38CE3C] rounded-xl shadow-sm hover:bg-[#2cb030] transition mb-2 sm:mb-0">
                         Create Account
                     </button>
-                    <button type="button" @click="open = false" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-800 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700">
+                    <button type="button" @click="open = false" class="w-full sm:w-auto inline-flex justify-center items-center px-5 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-xl shadow-sm hover:bg-slate-50 transition dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700">
                         Cancel
                     </button>
                 </div>

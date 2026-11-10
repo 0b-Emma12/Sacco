@@ -62,13 +62,13 @@
                         <td class="px-6 py-4">
                             @php
                                 $statusClass = match($loan->status) {
-                                    'approved', 'disbursed' => 'bg-emerald-100 text-emerald-700',
-                                    'rejected', 'defaulted' => 'bg-rose-100 text-rose-700',
-                                    'under_review' => 'bg-amber-100 text-amber-700',
-                                    default => 'bg-slate-100 text-slate-700'
+                                    'approved', 'disbursed' => 'bg-[#38CE3C]/15 text-[#38CE3C] border border-[#38CE3C]/20',
+                                    'rejected', 'defaulted' => 'bg-[#FF4D6B]/15 text-[#FF4D6B] border border-[#FF4D6B]/20',
+                                    'under_review', 'submitted' => 'bg-[#FFDE73]/30 text-amber-700 dark:text-amber-300 border border-amber-300/30',
+                                    default => 'bg-[#8E32E9]/15 text-[#8E32E9] border border-[#8E32E9]/20'
                                 };
                             @endphp
-                            <span class="px-2 py-1 text-xs font-medium rounded-full {{ $statusClass }}">
+                            <span class="px-2.5 py-1 text-xs font-semibold rounded-md {{ $statusClass }}">
                                 {{ ucfirst(str_replace('_', ' ', $loan->status)) }}
                             </span>
                         </td>

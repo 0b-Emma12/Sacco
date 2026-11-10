@@ -17,44 +17,44 @@
             @csrf
             
             <div class="space-y-2">
-                <label for="account_number" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Account Number</label>
-                <input type="text" name="account_number" id="account_number" value="{{ old('account_number', request('account_number')) }}" class="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100" placeholder="Enter account number" required>
+                <label for="account_number" class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Account Number</label>
+                <input type="text" name="account_number" id="account_number" value="{{ old('account_number', request('account_number')) }}" class="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100" placeholder="Enter account number" required>
                 @error('account_number')
-                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                    <p class="text-xs font-semibold text-[#FF4D6B] mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
             <div class="space-y-2">
-                <label for="transaction_type" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Transaction Type</label>
-                <select name="transaction_type" id="transaction_type" class="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100" required>
+                <label for="transaction_type" class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Transaction Type</label>
+                <select name="transaction_type" id="transaction_type" class="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100" required>
                     <option value="" disabled {{ !old('transaction_type') && !request('type') ? 'selected' : '' }}>Select transaction type</option>
                     <option value="deposit" {{ old('transaction_type', request('type')) == 'deposit' ? 'selected' : '' }}>Deposit</option>
                     <option value="withdrawal" {{ old('transaction_type', request('type')) == 'withdrawal' ? 'selected' : '' }}>Withdrawal</option>
                 </select>
                 @error('transaction_type')
-                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                    <p class="text-xs font-semibold text-[#FF4D6B] mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
             <div class="space-y-2">
-                <label for="amount" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Amount</label>
-                <input type="number" name="amount" id="amount" value="{{ old('amount') }}" step="0.01" min="1" class="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100" placeholder="Enter amount" required>
+                <label for="amount" class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Amount (UGX)</label>
+                <input type="number" name="amount" id="amount" value="{{ old('amount') }}" step="0.01" min="1" class="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100" placeholder="Enter amount" required>
                 @error('amount')
-                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                    <p class="text-xs font-semibold text-[#FF4D6B] mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
             <div class="space-y-2">
-                <label for="narration" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Narration</label>
-                <input type="text" name="narration" id="narration" value="{{ old('narration') }}" class="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100" placeholder="Enter narration">
+                <label for="narration" class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Narration</label>
+                <input type="text" name="narration" id="narration" value="{{ old('narration') }}" class="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100" placeholder="Enter narration">
                 @error('narration')
-                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                    <p class="text-xs font-semibold text-[#FF4D6B] mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
-            <div class="flex justify-end gap-x-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <a href="{{ route('transactions.index') }}" class="h-11 px-6 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium transition dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">Cancel</a>
-                <button type="submit" class="h-11 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition">Save Transaction</button>
+            <div class="flex justify-end gap-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <a href="{{ route('transactions.index') }}" class="h-11 px-6 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 font-semibold transition dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">Cancel</a>
+                <button type="submit" class="h-11 px-6 rounded-xl bg-[#38CE3C] hover:bg-[#2cb030] text-white font-bold shadow-md shadow-[#38CE3C]/20 transition">Save Transaction</button>
             </div>
         </form>
     </div>

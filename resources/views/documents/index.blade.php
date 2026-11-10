@@ -9,32 +9,33 @@
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
         <div>
             <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Company Documents</h1>
+            <p class="text-xs text-slate-400 mt-1">Regulatory filings, member agreements, policies & bylaws</p>
         </div>
         <div class="flex items-center gap-3">
-            <button onclick="document.getElementById('uploadModal').classList.remove('hidden')" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 border border-indigo-600 rounded hover:bg-indigo-700 transition">
+            <button onclick="document.getElementById('uploadModal').classList.remove('hidden')" class="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-[#38CE3C] hover:bg-[#2cb030] rounded-xl shadow-xs transition">
                 <i data-lucide="upload" class="w-4 h-4"></i> Upload Document
             </button>
         </div>
     </div>
 
     @if(session('success'))
-    <div class="bg-emerald-50 text-emerald-700 p-4 rounded-lg text-sm border border-emerald-100">
+    <div class="bg-[#38CE3C]/10 text-[#38CE3C] p-4 rounded-xl text-xs font-semibold border border-[#38CE3C]/20">
         {{ session('success') }}
     </div>
     @endif
 
     <!-- DATA TABLE -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden dark:bg-slate-900 dark:border-slate-800">
-        <div class="p-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden dark:bg-[#181824] dark:border-[#272738]">
+        <div class="p-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
             <div class="flex items-center gap-3">
-                <div class="h-10 w-10 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center dark:bg-indigo-500/20">
-                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                <div class="h-9 w-9 bg-[#38CE3C]/15 text-[#38CE3C] rounded-xl flex items-center justify-center">
+                    <i data-lucide="folder" class="w-4 h-4"></i>
                 </div>
                 <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">Document Management</h3>
             </div>
             <div class="relative">
                 <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
-                <input type="text" placeholder="Search documents..." class="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200">
+                <input type="text" placeholder="Search documents..." class="pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200">
             </div>
         </div>
         
@@ -59,12 +60,12 @@
                         <td class="px-6 py-4 text-slate-600 dark:text-slate-400">{{ $document->created_at->format('M d, Y') }}</td>
                         <td class="px-6 py-4 text-right flex justify-end gap-3">
                             @if($document->file_path)
-                            <a href="#" class="text-slate-400 hover:text-indigo-600" title="Download"><i data-lucide="download" class="w-4 h-4"></i></a>
+                            <a href="#" class="text-slate-400 hover:text-[#38CE3C]" title="Download"><i data-lucide="download" class="w-4 h-4"></i></a>
                             @endif
                             <form action="{{ route('documents.destroy', $document->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this document?');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                <button type="submit" class="text-slate-400 hover:text-[#FF4D6B]"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </form>
                         </td>
                     </tr>
@@ -75,9 +76,9 @@
                                 <div class="h-16 w-16 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mb-4 dark:bg-slate-800/50">
                                     <i data-lucide="file-x" class="w-8 h-8"></i>
                                 </div>
-                                <h4 class="text-slate-700 dark:text-slate-200 font-medium mb-1">No documents found</h4>
-                                <p class="text-slate-500 text-sm max-w-sm mb-4">You haven't uploaded any company documents yet. Get started by uploading your first document.</p>
-                                <button onclick="document.getElementById('uploadModal').classList.remove('hidden')" class="px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20">
+                                <h4 class="text-slate-700 dark:text-slate-200 font-bold mb-1">No documents found</h4>
+                                <p class="text-slate-500 text-xs max-w-sm mb-4">You haven't uploaded any company documents yet. Get started by uploading your first document.</p>
+                                <button onclick="document.getElementById('uploadModal').classList.remove('hidden')" class="px-4 py-2 text-xs font-bold text-[#38CE3C] bg-[#38CE3C]/10 rounded-xl hover:bg-[#38CE3C]/20 transition">
                                     Upload Document
                                 </button>
                             </div>
@@ -99,10 +100,10 @@
 
 <!-- Upload Modal -->
 <div id="uploadModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
-    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="document.getElementById('uploadModal').classList.add('hidden')"></div>
-    <div class="relative bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md p-6 border border-slate-100 dark:border-slate-800">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs" onclick="document.getElementById('uploadModal').classList.add('hidden')"></div>
+    <div class="relative bg-white dark:bg-[#181824] rounded-2xl shadow-xl w-full max-w-md p-6 border border-slate-200/80 dark:border-[#272738]">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Upload Document</h3>
+            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">Upload Document</h3>
             <button onclick="document.getElementById('uploadModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
@@ -112,26 +113,26 @@
             @csrf
             
             <div class="mb-4">
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Document Title</label>
-                <input type="text" name="title" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" placeholder="e.g. Employee Handbook">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Document Title</label>
+                <input type="text" name="title" required class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" placeholder="e.g. SACCO Bylaws & Constitution">
             </div>
 
             <div class="mb-4">
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description (Optional)</label>
-                <textarea name="description" rows="3" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" placeholder="Brief description of the document..."></textarea>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Description (Optional)</label>
+                <textarea name="description" rows="3" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" placeholder="Brief description of the document..."></textarea>
             </div>
 
             <div class="mb-6">
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">File</label>
-                <input type="file" name="file" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-500/20 dark:file:text-indigo-400">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">File</label>
+                <input type="file" name="file" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#38CE3C]/10 file:text-[#38CE3C] hover:file:bg-[#38CE3C]/20">
             </div>
 
             <div class="flex justify-end gap-3">
-                <button type="button" onclick="document.getElementById('uploadModal').classList.add('hidden')" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700">
+                <button type="button" onclick="document.getElementById('uploadModal').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
                     Cancel
                 </button>
-                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Upload
+                <button type="submit" class="px-4 py-2 text-xs font-bold text-white bg-[#38CE3C] hover:bg-[#2cb030] rounded-xl shadow-xs transition">
+                    Upload Document
                 </button>
             </div>
         </form>

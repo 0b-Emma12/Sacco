@@ -70,13 +70,23 @@ class DashboardController extends Controller
         $coreCapital = $totalShareCapital + $statutoryReserve + $retainedEarnings;
         $capitalAdequacy = $totalAssets > 0 ? ($coreCapital / $totalAssets) * 100 : 0;
 
+        // 6. Recent Activities & Records for Stellar Dashboard Widgets
+        $recentTransactions = Transaction::latest()->take(6)->get();
+        $recentLoans = Loan::with('member')->latest()->take(5)->get();
+        $recentMembers = Member::latest()->take(5)->get();
+        $totalMembersCount = Member::count();
+        $totalLoansCount = Loan::count();
+        $pendingLoansCount = Loan::whereIn('status', ['submitted', 'under_review'])->count();
+
         return view('dashboard', compact(
             'totalMemberSavings', 'totalShareCapital', 'activeMembers', 'grossLoanPortfolio',
             'cashAndBank', 'investments', 'fixedAssets', 'accruedInterest', 'totalAssets',
             'statutoryReserve', 'externalBorrowings', 'accountsPayable', 'retainedEarnings',
             'interestIncome', 'feesIncome', 'investmentIncome', 'otherIncome', 'grossIncome',
             'interestPaid', 'operationalExpenses', 'loanLossProvision', 'netSurplus',
-            'parRatio', 'nplAmount', 'provisionCoverage', 'liquidityRatio', 'capitalAdequacy'
+            'parRatio', 'nplAmount', 'provisionCoverage', 'liquidityRatio', 'capitalAdequacy',
+            'recentTransactions', 'recentLoans', 'recentMembers', 'totalMembersCount',
+            'totalLoansCount', 'pendingLoansCount'
         ));
     }
 

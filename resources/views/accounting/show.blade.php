@@ -14,7 +14,7 @@
                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
                 Back to Ledger
             </a>
-            <button class="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition font-medium dark:bg-indigo-500/20 dark:text-indigo-300">
+            <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 bg-[#8E32E9]/10 text-[#8E32E9] rounded-xl hover:bg-[#8E32E9]/20 transition font-semibold text-xs dark:bg-[#8E32E9]/20 dark:text-[#8E32E9]">
                 <i data-lucide="printer" class="w-4 h-4"></i>
                 Print
             </button>
@@ -71,10 +71,10 @@
                                     </span>
                                     <span class="text-sm text-slate-600 dark:text-slate-300">{{ $line->account_name }}</span>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium text-slate-800 dark:text-slate-200">
+                                <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-semibold text-[#38CE3C]">
                                     {{ $line->debit > 0 ? number_format($line->debit, 2) : '-' }}
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium text-slate-800 dark:text-slate-200">
+                                <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-semibold text-[#FF4D6B]">
                                     {{ $line->credit > 0 ? number_format($line->credit, 2) : '-' }}
                                 </td>
                             </tr>
@@ -83,10 +83,10 @@
                     <tfoot>
                         <tr class="bg-slate-50 dark:bg-slate-800/80 font-medium">
                             <td class="px-4 py-4 text-right text-sm text-slate-700 dark:text-slate-300 uppercase tracking-wider font-bold">Total</td>
-                            <td class="px-4 py-4 text-right text-sm font-bold text-slate-900 dark:text-white border-t-2 border-slate-200 dark:border-slate-700">
+                            <td class="px-4 py-4 text-right text-sm font-bold text-[#38CE3C] border-t-2 border-slate-200 dark:border-slate-700">
                                 {{ number_format($totalDebit, 2) }}
                             </td>
-                            <td class="px-4 py-4 text-right text-sm font-bold text-slate-900 dark:text-white border-t-2 border-slate-200 dark:border-slate-700">
+                            <td class="px-4 py-4 text-right text-sm font-bold text-[#FF4D6B] border-t-2 border-slate-200 dark:border-slate-700">
                                 {{ number_format($totalCredit, 2) }}
                             </td>
                         </tr>
@@ -95,13 +95,13 @@
             </div>
             
             @if(abs($totalDebit - $totalCredit) > 0.001)
-                <div class="mt-4 p-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800 flex items-center gap-2">
+                <div class="mt-4 p-4 text-sm text-[#FF4D6B] bg-[#FF4D6B]/10 rounded-xl border border-[#FF4D6B]/20 flex items-center gap-2 font-semibold">
                     <i data-lucide="alert-triangle" class="w-5 h-5"></i>
                     <strong>Warning:</strong> This journal entry is unbalanced!
                 </div>
             @else
-                <div class="mt-4 flex items-center justify-end gap-2 text-sm text-green-600 dark:text-green-400 font-medium">
-                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                <div class="mt-4 flex items-center justify-end gap-2 text-xs font-bold text-[#38CE3C]">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
                     Balanced Entry
                 </div>
             @endif
