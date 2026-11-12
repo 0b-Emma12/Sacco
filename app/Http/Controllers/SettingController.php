@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
@@ -17,8 +18,27 @@ class SettingController extends Controller
 
     public function store(Request $request) 
     { 
-        $data = $request->except(['_token', '_method']);
-        
+        $data = $request->except(['_token', '_method', 'org_logo_file', 'remove_logo']);
+
+        if ($request->hasFile('org_logo_file')) {
+            $request->validate([
+                'org_logo_file' => 'image|mimes:png,jpg,jpeg|max:2048',
+            ]);
+
+            $previous = Setting::get('org_logo');
+            if ($previous) {
+                Storage::disk('local')->delete($previous);
+            }
+
+            Setting::set('org_logo', $request->file('org_logo_file')->store('branding', 'local'), 'organization');
+        } elseif ($request->boolean('remove_logo')) {
+            $previous = Setting::get('org_logo');
+            if ($previous) {
+                Storage::disk('local')->delete($previous);
+            }
+            Setting::set('org_logo', '', 'organization');
+        }
+
         foreach ($data as $key => $value) {
             if (is_array($value)) {
                 $value = json_encode($value);
@@ -27,6 +47,14 @@ class SettingController extends Controller
         }
 
         return redirect()->route('settings.index')->with('success', 'Settings updated successfully'); 
+    }
+
+    public function logo()
+    {
+        $path = Setting::get('org_logo');
+        abort_unless($path && Storage::disk('local')->exists($path), 404);
+
+        return Storage::disk('local')->response($path);
     }
 
     public function show($id) { return view('settings.show', compact('id')); }

@@ -2,6 +2,13 @@
 
 @section('title', 'Edit Member')
 
+@php
+    $noks = array_values(old('next_of_kin', $member->nextOfKins->toArray()));
+    if (empty($noks) || trim((string) ($noks[count($noks) - 1]['name'] ?? '')) !== '') {
+        $noks[] = [];
+    }
+@endphp
+
 @section('content')
 <div class="flex flex-col gap-6 mx-auto w-full max-w-7xl">
     
@@ -12,7 +19,7 @@
         </div>
         <div class="flex items-center gap-3">
             <a href="{{ route('members.show', $member->id) }}" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50 transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200">
-                <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Details
+                <x-icon name="arrow-left" class="w-4 h-4"/> Back to Details
             </a>
         </div>
     </div>
@@ -112,7 +119,7 @@
         <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <h2 class="text-lg font-medium text-slate-800 dark:text-slate-100 mb-4">Employment Details</h2>
             <hr class="border-slate-200 dark:border-slate-800 mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="employment-section">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 employment-fields">
                 <div>
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Employment Type</label>
                     <select name="employment[employment_type]" id="employment_type" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sacco/50 dark:bg-slate-900 dark:border-slate-700">
@@ -135,11 +142,11 @@
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Monthly Income</label>
                     <input type="number" step="0.01" name="employment[monthly_income]" value="{{ old('employment.monthly_income', $member->employmentDetail->monthly_income ?? '') }}" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sacco/50 dark:bg-slate-900 dark:border-slate-700">
                 </div>
-                <div class="emp-field business-only hidden">
+                <div class="emp-field business-only">
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Business Name</label>
                     <input type="text" name="employment[business_name]" value="{{ old('employment.business_name', $member->employmentDetail->business_name ?? '') }}" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sacco/50 dark:bg-slate-900 dark:border-slate-700">
                 </div>
-                <div class="emp-field business-only hidden">
+                <div class="emp-field business-only">
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Business Type</label>
                     <input type="text" name="employment[business_type]" value="{{ old('employment.business_type', $member->employmentDetail->business_type ?? '') }}" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sacco/50 dark:bg-slate-900 dark:border-slate-700">
                 </div>
@@ -150,14 +157,12 @@
         <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <h2 class="text-lg font-medium text-slate-800 dark:text-slate-100 mb-4">Next Of Kin Details</h2>
             <hr class="border-slate-200 dark:border-slate-800 mb-6">
-            <div id="nok-container" class="space-y-4">
-                @php $noks = old('next_of_kin', $member->nextOfKins->toArray()); @endphp
-                @if(empty($noks))
-                    @php $noks = [[]]; @endphp
-                @endif
-                
+            <p class="text-xs text-slate-500 mb-4">
+                Fill the extra blank row to add a contact. Clear a row completely to remove it when saving.
+            </p>
+            <div class="space-y-4">
                 @foreach($noks as $index => $nok)
-                <div class="nok-item flex items-center gap-4">
+                <div class="flex items-center gap-4">
                     <div class="flex-grow grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-xs text-slate-500 mb-1">Name</label>
@@ -176,15 +181,9 @@
                             <input type="text" name="next_of_kin[{{ $index }}][national_id]" value="{{ $nok['national_id'] ?? '' }}" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:bg-slate-900 dark:border-slate-700">
                         </div>
                     </div>
-                    <button type="button" class="remove-nok mt-6 text-slate-400 hover:text-[#FF4D6B] transition" {{ count($noks) === 1 ? 'style=display:none' : '' }}>
-                        <i data-lucide="x-circle" class="w-5 h-5"></i>
-                    </button>
                 </div>
                 @endforeach
             </div>
-            <button type="button" id="add-nok" class="mt-4 flex items-center gap-1.5 text-sm font-semibold text-[#38CE3C] hover:text-[#2cb030] transition">
-                <i data-lucide="plus-circle" class="w-4 h-4"></i> Add another Next of kin
-            </button>
         </div>
 
         <div class="flex justify-end gap-3">
@@ -193,88 +192,4 @@
         </div>
     </form>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const empTypeSelect = document.getElementById('employment_type');
-        const empFields = document.querySelectorAll('.emp-field');
-        
-        function updateEmpFields() {
-            const val = empTypeSelect.value;
-            empFields.forEach(f => f.classList.add('hidden'));
-            
-            if (val === 'EMPLOYED') {
-                document.querySelectorAll('.employed-only').forEach(f => f.classList.remove('hidden'));
-                document.querySelectorAll('.not-unemployed').forEach(f => f.classList.remove('hidden'));
-            } else if (val === 'SELF_EMPLOYED') {
-                document.querySelectorAll('.self-employed-only').forEach(f => f.classList.remove('hidden'));
-                document.querySelectorAll('.not-unemployed').forEach(f => f.classList.remove('hidden'));
-            } else if (val === 'BUSINESS') {
-                document.querySelectorAll('.business-only').forEach(f => f.classList.remove('hidden'));
-                document.querySelectorAll('.not-unemployed').forEach(f => f.classList.remove('hidden'));
-            }
-        }
-        
-        if(empTypeSelect) {
-            empTypeSelect.addEventListener('change', updateEmpFields);
-            updateEmpFields();
-        }
-
-        const addNokBtn = document.getElementById('add-nok');
-        const nokContainer = document.getElementById('nok-container');
-        
-        addNokBtn.addEventListener('click', () => {
-            const items = nokContainer.querySelectorAll('.nok-item');
-            const index = items.length;
-            const tpl = `
-                <div class="nok-item flex items-center gap-4 mt-4">
-                    <div class="flex-grow grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div>
-                            <label class="block text-xs text-slate-500 mb-1">Name</label>
-                            <input type="text" name="next_of_kin[${index}][name]" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:bg-slate-900 dark:border-slate-700">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-500 mb-1">Relationship</label>
-                            <input type="text" name="next_of_kin[${index}][relationship]" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:bg-slate-900 dark:border-slate-700">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-500 mb-1">Phone</label>
-                            <input type="text" name="next_of_kin[${index}][phone_number]" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:bg-slate-900 dark:border-slate-700">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-slate-500 mb-1">National ID</label>
-                            <input type="text" name="next_of_kin[${index}][national_id]" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:bg-slate-900 dark:border-slate-700">
-                        </div>
-                    </div>
-                    <button type="button" class="remove-nok mt-6 text-slate-400 hover:text-[#FF4D6B] transition">
-                        <i data-lucide="x-circle" class="w-5 h-5"></i>
-                    </button>
-                </div>
-            `;
-            nokContainer.insertAdjacentHTML('beforeend', tpl);
-            updateRemoveButtons();
-            
-            // re-initialize lucide icons if window.lucide exists
-            if (window.lucide) {
-                window.lucide.createIcons();
-            }
-        });
-
-        nokContainer.addEventListener('click', (e) => {
-            const btn = e.target.closest('.remove-nok');
-            if (btn) {
-                btn.closest('.nok-item').remove();
-                updateRemoveButtons();
-            }
-        });
-
-        function updateRemoveButtons() {
-            const items = nokContainer.querySelectorAll('.nok-item');
-            const btns = nokContainer.querySelectorAll('.remove-nok');
-            btns.forEach(btn => {
-                btn.style.display = items.length === 1 ? 'none' : 'block';
-            });
-        }
-    });
-</script>
 @endsection

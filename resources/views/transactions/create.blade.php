@@ -4,7 +4,7 @@
 <div class="mx-auto w-full max-w-2xl flex flex-col gap-6">
     <div class="flex items-center gap-4">
         <a href="{{ route('transactions.index') }}" class="p-2 bg-white rounded-lg border border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition">
-            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            <x-icon name="arrow-left" class="w-5 h-5"/>
         </a>
         <div>
             <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Create Transaction</h1>
@@ -50,6 +50,27 @@
                 @error('narration')
                     <p class="text-xs font-semibold text-[#FF4D6B] mt-1">{{ $message }}</p>
                 @enderror
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label for="payment_method" class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Payment Method</label>
+                    <select name="payment_method" id="payment_method" class="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100">
+                        @foreach(['CASH' => 'Cash', 'MOBILE_MONEY' => 'Mobile Money', 'BANK_TRANSFER' => 'Bank Transfer', 'CHEQUE' => 'Cheque'] as $value => $label)
+                            <option value="{{ $value }}" {{ old('payment_method', 'CASH') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('payment_method')
+                        <p class="text-xs font-semibold text-[#FF4D6B] mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div class="space-y-2">
+                    <label for="external_reference" class="block text-sm font-semibold text-slate-700 dark:text-slate-300">External Reference</label>
+                    <input type="text" name="external_reference" id="external_reference" value="{{ old('external_reference') }}" class="w-full h-11 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100" placeholder="MoMo / bank slip / cheque no.">
+                    @error('external_reference')
+                        <p class="text-xs font-semibold text-[#FF4D6B] mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
             <div class="flex justify-end gap-x-3 pt-4 border-t border-slate-100 dark:border-slate-800">

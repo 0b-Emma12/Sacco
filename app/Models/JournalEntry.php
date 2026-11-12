@@ -15,6 +15,8 @@ class JournalEntry extends Model
         'posted_by_name',
         'posted_at',
         'is_reversed',
+        'reference_type',
+        'reference_id',
     ];
 
     protected $casts = [

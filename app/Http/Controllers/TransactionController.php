@@ -10,19 +10,30 @@ class TransactionController extends Controller
 {
     public function index(Request $request) 
     {
-        $query = Transaction::latest();
-        
-        if ($search = $request->input('search')) {
-            $query->where('reference', 'like', "%{$search}%")
-                  ->orWhere('account_number', 'like', "%{$search}%")
-                  ->orWhere('transaction_type', 'like', "%{$search}%")
-                  ->orWhere('narration', 'like', "%{$search}%")
-                  ->orWhere('amount', 'like', "%{$search}%")
-                  ->orWhere('performed_by_username', 'like', "%{$search}%");
+        $search = (string) $request->input('search');
+        $base = Transaction::with('account.member')->matching(['search' => $search]);
+
+        $creditTypes = ['deposit', 'dividend', 'loan_disbursement'];
+        $summary = [
+            'count' => (clone $base)->count(),
+            'inflow' => (float) (clone $base)->whereIn('transaction_type', $creditTypes)->sum('amount'),
+            'outflow' => (float) (clone $base)->whereNotIn('transaction_type', $creditTypes)->sum('amount'),
+        ];
+
+        $typeCounts = (clone $base)
+            ->reorder()
+            ->selectRaw('transaction_type, COUNT(*) as aggregate')
+            ->groupBy('transaction_type')
+            ->pluck('aggregate', 'transaction_type');
+
+        $type = (string) $request->input('type');
+        if ($type === '' || ! $typeCounts->has($type)) {
+            $type = '';
         }
-        
-        $transactions = $query->paginate(10)->withQueryString();
-        return view('transactions.index', compact('transactions')); 
+
+        $transactions = (clone $base)->matching(['type' => $type])->latest()->paginate(10)->withQueryString();
+
+        return view('transactions.index', compact('transactions', 'summary', 'typeCounts', 'type')); 
     }
 
     public function create() 
@@ -37,53 +48,86 @@ class TransactionController extends Controller
             'amount' => 'required|numeric|min:1',
             'account_number' => 'required|string|exists:accounts,account_number',
             'narration' => 'nullable|string',
+            'payment_method' => 'nullable|string|in:CASH,MOBILE_MONEY,BANK_TRANSFER,CHEQUE',
+            'external_reference' => 'nullable|string|max:100',
         ]);
 
-        $account = \App\Models\Account::where('account_number', $request->account_number)->firstOrFail();
-        $member = $account->member;
+        $amount = (float) $request->amount;
 
-        // Block transactions on inactive accounts or members who have exited/closed
-        if (!$account->is_active) {
-            return redirect()->back()->withErrors(['account_number' => 'This account is inactive. Transactions are not allowed.'])->withInput();
-        }
-        if ($member && in_array(strtolower($member->status), ['exited', 'closed'])) {
-            return redirect()->back()->withErrors(['account_number' => 'This member has ' . strtolower($member->status) . ' the SACCO. Transactions are not allowed.'])->withInput();
-        }
+        $transaction = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $amount) {
+            $account = \App\Models\Account::where('account_number', $request->account_number)->lockForUpdate()->firstOrFail();
+            $member = $account->member;
 
-        if ($request->transaction_type === 'withdrawal') {
-            if ($account->balance < $request->amount) {
-                return redirect()->back()->withErrors(['amount' => 'Insufficient account balance.']);
+            // Block transactions on inactive accounts or members who have exited/closed
+            if (!$account->is_active) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['account_number' => 'This account is inactive. Transactions are not allowed.']);
             }
-            
-            // SACCO Guarantor Freeze Logic:
-            // Ensure withdrawal does not cut into frozen pledges
-            if ($member->available_savings < $request->amount) {
-                $frozenAmount = $member->total_savings - $member->available_savings;
-                return redirect()->back()->withErrors(['amount' => 'Insufficient available savings. UGX ' . number_format($frozenAmount, 2) . ' is frozen as loan collateral.']);
+            if ($member && in_array(strtolower($member->status), ['exited', 'closed', 'deceased'], true)) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['account_number' => 'This member has left the SACCO. Transactions are not allowed.']);
+            }
+            if ($member && $member->transactionsBlockedByKyc()) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'account_number' => 'KYC verification is outstanding. Transactions were blocked from '.$member->kycGraceEndsAt()->format('d M Y').' until form M02 is approved.',
+                ]);
             }
 
-            $account->balance -= $request->amount;
-            $member->total_savings -= $request->amount;
-        } else {
-            $account->balance += $request->amount;
-            $member->total_savings += $request->amount;
-        }
+            if ($request->transaction_type === 'withdrawal') {
+                if ($account->maturity_date && \Carbon\Carbon::parse($account->maturity_date)->isFuture()) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['amount' => 'This fixed deposit matures on '.$account->maturity_date.'. Early withdrawal is not permitted.']);
+                }
 
-        $account->save();
-        $member->save();
+                if ((float) $account->balance < $amount) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['amount' => 'Insufficient account balance.']);
+                }
 
-        $reference = strtoupper(Str::random(10));
+                $available = (float) $member->available_savings;
+                if ($available < $amount) {
+                    $frozen = (float) $member->total_savings - $available;
+                    throw \Illuminate\Validation\ValidationException::withMessages(['amount' => 'Insufficient available savings. UGX '.number_format($frozen, 2).' is held as loan security or guarantor collateral.']);
+                }
 
-        Transaction::create([
-            'reference' => $reference,
-            'account_number' => $request->account_number,
-            'transaction_type' => $request->transaction_type,
-            'amount' => $request->amount,
-            'narration' => $request->narration,
-            'performed_by_username' => auth()->user() ? auth()->user()->username : 'Admin',
-        ]);
+                $account->balance -= $amount;
+                $member->total_savings -= $amount;
+            } else {
+                $account->balance += $amount;
+                $member->total_savings += $amount;
 
-        return redirect()->route('transactions.index')->with('success', 'Transaction completed successfully'); 
+                if ($member && strtolower($member->status) === 'dormant') {
+                    $member->status = 'Active';
+                }
+            }
+
+            $account->save();
+            $member->save();
+
+            $tx = Transaction::create([
+                'reference' => strtoupper(\Illuminate\Support\Str::random(10)),
+                'account_number' => $request->account_number,
+                'transaction_type' => $request->transaction_type,
+                'amount' => $amount,
+                'narration' => $request->narration,
+                'payment_method' => $request->input('payment_method', 'CASH'),
+                'external_reference' => $request->input('external_reference'),
+                'performed_by_username' => auth()->user() ? auth()->user()->username : 'System',
+            ]);
+
+            $isDeposit = $request->transaction_type === 'deposit';
+            \App\Services\LedgerService::post(
+                $isDeposit ? 'DEP' : 'WDL',
+                ($isDeposit ? 'Member deposit' : 'Member withdrawal').' - '.$member->membership_number,
+                $isDeposit
+                    ? [['code' => '1000', 'debit' => $amount], ['code' => '2000', 'credit' => $amount]]
+                    : [['code' => '2000', 'debit' => $amount], ['code' => '1000', 'credit' => $amount]],
+                'transaction',
+                $tx->id
+            );
+
+            \App\Services\MemberCapitalService::refresh($member);
+
+            return $tx;
+        });
+
+        return redirect()->route('transactions.index')->with('success', 'Transaction '.$transaction->reference.' completed successfully'); 
     }
 
     public function show($id) 
@@ -94,8 +138,12 @@ class TransactionController extends Controller
 
     public function receipt($id) 
     { 
-        $transaction = Transaction::findOrFail($id);
-        return view('transactions.receipt', compact('transaction')); 
+        $transaction = Transaction::with('account.member')->findOrFail($id);
+        $member = $transaction->account->member ?? null;
+        $print = \App\Services\PrintDocumentService::forRequest('DEPOSIT_RECEIPT', $transaction, $member);
+        $amountInWords = \App\Services\NumberToWords::shillings((float) $transaction->amount);
+
+        return view('transactions.receipt', compact('transaction', 'member', 'print', 'amountInWords')); 
     }
 
     public function edit($id) 

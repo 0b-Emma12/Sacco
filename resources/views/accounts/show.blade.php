@@ -2,49 +2,49 @@
 @section('title', 'Account Details')
 
 @section('content')
-<div class="flex flex-col gap-6 mx-auto w-full max-w-5xl">
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
-        <div>
-            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Accounts</div>
-            <h1 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">
-                Account {{ $account->account_number }}
-            </h1>
-        </div>
-        <div class="flex items-center gap-3 flex-wrap">
-            @if($account->is_active && !in_array(strtolower($account->member->status ?? ''), ['exited', 'closed']))
-            <a href="{{ route('transactions.create', ['account_number' => $account->account_number, 'type' => 'deposit']) }}" class="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-[#38CE3C] bg-[#38CE3C]/10 border border-[#38CE3C]/20 rounded-xl hover:bg-[#38CE3C]/20 transition">
-                <i data-lucide="arrow-down-to-line" class="w-4 h-4"></i> Deposit
-            </a>
-            <a href="{{ route('transactions.create', ['account_number' => $account->account_number, 'type' => 'withdrawal']) }}" class="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold text-[#FF4D6B] bg-[#FF4D6B]/10 border border-[#FF4D6B]/20 rounded-xl hover:bg-[#FF4D6B]/20 transition">
-                <i data-lucide="arrow-up-from-line" class="w-4 h-4"></i> Withdraw
-            </a>
-            <div class="w-px h-5 bg-slate-300 mx-1"></div>
-            @endif
-            <a href="{{ route('accounts.index') }}" class="text-sm font-medium text-slate-500 hover:text-slate-700">← Back to Accounts</a>
-        </div>
+<div class="mx-auto w-full max-w-7xl flex flex-col gap-6">
+    <x-page-header
+        eyebrow="Accounts"
+        title="Account {{ $account->account_number }}"
+        subtitle="{{ $account->product->name ?? 'Member account' }} · {{ $account->member->first_name }} {{ $account->member->last_name }}">
+        <a href="{{ route('transactions.create', ['account_number' => $account->account_number, 'type' => 'deposit']) }}" class="h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 dark:bg-[#181824] dark:border-[#272738] dark:text-slate-200 inline-flex items-center gap-2 transition">
+            <x-icon name="arrow-down-to-line" class="w-4 h-4 text-[#38CE3C]"/> Deposit
+        </a>
+        <a href="{{ route('transactions.create', ['account_number' => $account->account_number, 'type' => 'withdrawal']) }}" class="h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 dark:bg-[#181824] dark:border-[#272738] dark:text-slate-200 inline-flex items-center gap-2 transition">
+            <x-icon name="arrow-up-from-line" class="w-4 h-4 text-[#FF4D6B]"/> Withdraw
+        </a>
+        <a href="{{ route('accounts.index') }}" class="h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 dark:bg-[#181824] dark:border-[#272738] dark:text-slate-200 inline-flex items-center gap-2 transition">
+            <x-icon name="arrow-left" class="w-4 h-4"/> Back to accounts
+        </a>
+    </x-page-header>
+
+    <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <x-stat-card label="Account balance" :value="'UGX '.number_format($account->balance, 2)" meta="Current posted balance" icon="wallet" tone="green"/>
+        <x-stat-card label="Transactions" :value="number_format($transactions->count())" meta="Postings on this account" icon="arrow-left-right" tone="blue"/>
+        <x-stat-card label="Member savings" :value="'UGX '.number_format($account->member->total_savings, 2)" meta="Across all member accounts" icon="coins" tone="purple"/>
+        <x-stat-card label="Share capital" :value="'UGX '.number_format($account->member->share_capital, 2)" meta="Non-withdrawable equity" icon="landmark" tone="amber"/>
     </div>
 
-    <!-- Overview Card -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 dark:bg-slate-900 dark:border-slate-800">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <x-panel title="Account particulars" subtitle="Holder, product and current standing." icon="wallet">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 p-5 sm:p-6">
             <div>
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Account Holder</div>
-                <div class="font-semibold text-slate-800 dark:text-slate-200">
+                <div class="text-[11px] font-bold tracking-wider text-slate-400 uppercase mb-1">Account holder</div>
+                <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">
                     <a href="{{ route('members.show', $account->member->id) }}" class="text-[#38CE3C] hover:underline">
                         {{ $account->member->first_name }} {{ $account->member->last_name }}
                     </a>
                 </div>
             </div>
             <div>
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Product Type</div>
-                <div class="font-semibold text-slate-800 dark:text-slate-200">{{ $account->product->name ?? 'N/A' }}</div>
+                <div class="text-[11px] font-bold tracking-wider text-slate-400 uppercase mb-1">Product type</div>
+                <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ $account->product->name ?? 'N/A' }}</div>
             </div>
             <div>
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Current Balance</div>
-                <div class="font-bold text-xl text-[#38CE3C]">UGX {{ number_format($account->balance, 2) }}</div>
+                <div class="text-[11px] font-bold tracking-wider text-slate-400 uppercase mb-1">Current balance</div>
+                <div class="text-lg font-extrabold text-[#38CE3C]">UGX {{ number_format($account->balance, 2) }}</div>
             </div>
             <div>
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Status</div>
+                <div class="text-[11px] font-bold tracking-wider text-slate-400 uppercase mb-1">Status</div>
                 @if($account->is_active)
                     <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-[#38CE3C]/15 text-[#38CE3C] border border-[#38CE3C]/20">
                         Active
@@ -56,33 +56,26 @@
                 @endif
             </div>
         </div>
-    </div>
+    </x-panel>
 
-    <!-- Transactions Ledger -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden dark:bg-slate-900 dark:border-slate-800">
-        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-            <div>
-                <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">Transaction History</h3>
-                <p class="text-xs text-slate-500 mt-1">Recent deposits and withdrawals for this account.</p>
-            </div>
-        </div>
+    <x-panel title="Transaction history" subtitle="Recent deposits and withdrawals for this account." icon="arrow-left-right">
         <div class="w-full overflow-x-auto">
-            <table class="w-full text-left text-sm">
-                <thead>
-                    <tr class="bg-slate-50 dark:bg-slate-950/50 text-slate-500 text-xs uppercase tracking-wider">
-                        <th class="px-6 py-4 font-semibold">Date</th>
-                        <th class="px-6 py-4 font-semibold">Reference</th>
-                        <th class="px-6 py-4 font-semibold">Type</th>
-                        <th class="px-6 py-4 font-semibold">Amount</th>
-                        <th class="px-6 py-4 font-semibold">Narration</th>
+            <table class="w-full text-left">
+                <thead class="bg-slate-50/50 dark:bg-slate-950/50">
+                    <tr class="border-b border-slate-100 dark:border-slate-800">
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Reference</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Type</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider text-right">Amount</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Narration</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($transactions as $tx)
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition">
-                        <td class="px-6 py-4 text-slate-600 dark:text-slate-400">{{ $tx->created_at->format('Y-m-d H:i') }}</td>
-                        <td class="px-6 py-4 font-medium text-slate-800 dark:text-slate-200">{{ $tx->reference }}</td>
-                        <td class="px-6 py-4">
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                        <td class="px-5 py-4 text-sm text-slate-600 dark:text-slate-400">{{ $tx->created_at->format('Y-m-d H:i') }}</td>
+                        <td class="px-5 py-4 text-sm font-semibold text-slate-800 dark:text-slate-200">{{ $tx->reference }}</td>
+                        <td class="px-5 py-4">
                             @if($tx->transaction_type === 'deposit')
                                 <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-[#38CE3C]/15 text-[#38CE3C] border border-[#38CE3C]/20">Deposit</span>
                             @elseif($tx->transaction_type === 'share_transfer')
@@ -91,19 +84,21 @@
                                 <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-[#FF4D6B]/15 text-[#FF4D6B] border border-[#FF4D6B]/20">Withdrawal</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 font-semibold {{ $tx->transaction_type === 'deposit' ? 'text-[#38CE3C]' : 'text-[#FF4D6B]' }}">
+                        <td class="px-5 py-4 text-right text-sm font-semibold {{ $tx->transaction_type === 'deposit' ? 'text-[#38CE3C]' : 'text-[#FF4D6B]' }}">
                             {{ $tx->transaction_type === 'deposit' ? '+' : '-' }} UGX {{ number_format($tx->amount, 2) }}
                         </td>
-                        <td class="px-6 py-4 text-slate-600 dark:text-slate-400 text-xs">{{ $tx->narration }}</td>
+                        <td class="px-5 py-4 text-xs text-slate-600 dark:text-slate-400">
+                            <p class="max-w-64 truncate" title="{{ $tx->narration }}">{{ $tx->narration ?: '—' }}</p>
+                        </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="5" class="px-6 py-8 text-center text-slate-500">No transactions recorded for this account.</td>
-                    </tr>
+                        <x-empty-state colspan="5" icon="arrow-left-right" title="No transactions recorded"
+                                       message="Deposits and withdrawals posted to this account will appear here.">
+                        </x-empty-state>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
+    </x-panel>
 </div>
 @endsection

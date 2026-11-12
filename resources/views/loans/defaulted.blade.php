@@ -2,25 +2,20 @@
 @section('title', $title ?? 'Defaulted Instalments')
 
 @section('content')
-<div class="flex flex-col gap-6 mx-auto w-full max-w-7xl">
-    
-    <!-- PAGE HEADER -->
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
-        <div>
-            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Loans</div>
-            <h1 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">{{ $title ?? 'Defaulted Instalments' }}</h1>
-        </div>
-    </div>
+<div class="mx-auto w-full max-w-7xl flex flex-col gap-6">
+    <x-page-header
+        eyebrow="Loans"
+        title="{{ $title ?? 'Defaulted Instalments' }}"
+        subtitle="Loans in arrears and the automated recovery queue.">
+        <a href="{{ route('loans.index') }}" class="h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 dark:bg-[#181824] dark:border-[#272738] dark:text-slate-200 inline-flex items-center gap-2 transition">
+            <x-icon name="arrow-left" class="w-4 h-4"/> Back to loans
+        </a>
+    </x-page-header>
 
-    <!-- DATA TABLE -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 text-center dark:bg-slate-900 dark:border-slate-800">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#FF4D6B]/15 text-[#FF4D6B] mb-4 dark:bg-[#FF4D6B]/20">
-            <i data-lucide="alert-triangle" class="w-8 h-8"></i>
-        </div>
-        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">No Defaulted Instalments</h3>
-        <p class="text-sm text-slate-500 max-w-md mx-auto">
-            This module is currently under construction. Defaulted loans and automated recovery protocols will be listed here.
-        </p>
-    </div>
+    <x-panel title="Defaulted instalments" subtitle="Recovery tracking for loans that have fallen into arrears." icon="alert-triangle" tone="coral">
+        <x-empty-state icon="alert-triangle" title="No defaulted instalments"
+                       message="Defaulted loans and automated recovery protocols will be listed here once the arrears engine flags an instalment.">
+        </x-empty-state>
+    </x-panel>
 </div>
 @endsection

@@ -15,7 +15,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        $schedule->command('sacco:update-arrears')->dailyAt('00:30');
+        $schedule->command('sacco:process-standing-orders')->dailyAt('00:45');
+        $schedule->command('sacco:check-defaults')->dailyAt('01:00');
+        $schedule->command('sacco:mark-dormant')->weeklyOn(1, '02:00');
+        $schedule->command('sacco:snapshot-capital')->monthlyOn(1, '02:30');
     }
 
     /**

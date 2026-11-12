@@ -15,4 +15,9 @@ class ChartOfAccount extends Model
         'type',
         'description',
     ];
+
+    public function journalLines()
+    {
+        return $this->hasMany(JournalEntryLine::class, 'account_code', 'code');
+    }
 }

@@ -4,13 +4,54 @@ use App\Models\Account;
 use Illuminate\Http\Request;
 class AccountController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $accounts = Account::with(['member', 'product'])->orderBy('created_at', 'desc')->paginate(15);
-        return view('accounts.index', compact('accounts'));
+        $query = Account::with(['member', 'product']);
+
+        if ($search = trim((string) $request->input('q'))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('account_number', 'like', "%{$search}%")
+                  ->orWhereHas('member', function ($m) use ($search) {
+                      $m->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('membership_number', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $summary = [
+            'total' => (clone $query)->count(),
+            'balance' => (float) (clone $query)->sum('balance'),
+            'active' => (clone $query)->where('is_active', true)->count(),
+            'inactive' => (clone $query)->where('is_active', false)->count(),
+        ];
+
+        $accounts = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
+        return view('accounts.index', compact('accounts', 'summary'));
     }
 
-    public function create() { return view('accounts.create'); }
+    public function create(Request $request)
+    {
+        $members = \App\Models\Member::orderBy('first_name')->orderBy('last_name')->get();
+        $selectedMemberId = $request->input('member_id', old('member_id'));
+
+        $products = \App\Models\Product::where('is_active', true)->orderBy('name')->get();
+
+        if ($selectedMemberId && ($member = \App\Models\Member::find($selectedMemberId))) {
+            $products = $products->reject(function ($product) use ($member) {
+                if ($member->accounts()->where('product_id', $product->id)->exists()) {
+                    return true;
+                }
+
+                return str_contains(strtolower($product->name), 'share capital')
+                    && $member->accounts()->whereHas('product', function ($query) {
+                        $query->where('name', 'like', '%Share Capital%');
+                    })->exists();
+            })->values();
+        }
+
+        return view('accounts.create', compact('members', 'products', 'selectedMemberId'));
+    }
     public function store(Request $request) {
         $validated = $request->validate([
             'member_id' => 'required|exists:members,id',
@@ -32,7 +73,9 @@ class AccountController extends Controller
             ->where('product_id', $validated['product_id'])
             ->exists();
         if ($existing) {
-            return redirect()->back()->with('error', 'Member already has an account of this product type.');
+            return redirect()->route('accounts.create', ['member_id' => $validated['member_id']])
+                ->withErrors(['product_id' => 'This member already has an account of this product type.'])
+                ->withInput();
         }
 
         // Default account logic
@@ -54,7 +97,8 @@ class AccountController extends Controller
 
         Account::create($validated);
 
-        return redirect()->back()->with('success', "Account {$accountNumber} created successfully."); 
+        return redirect()->route('members.show', $validated['member_id'])
+            ->with('success', "Account {$accountNumber} created successfully.");
     }
     
     public function show($id) { 
@@ -69,10 +113,12 @@ class AccountController extends Controller
     public function update(Request $request, $id) { return redirect()->route('accounts.index')->with('success', 'Updated successfully'); }
     public function destroy($id) { 
         $account = Account::findOrFail($id);
-        
-        // Cascading deletion for related transactions
-        \App\Models\Transaction::where('account_number', $account->account_number)->delete();
-        
+
+        $hasTransactions = \App\Models\Transaction::where('account_number', $account->account_number)->exists();
+        if ($hasTransactions || (float) $account->balance != 0.0) {
+            return redirect()->back()->withErrors(['error' => 'Accounts with transactions or a non-zero balance cannot be deleted. Deactivate the account instead.']);
+        }
+
         $account->delete();
 
         return redirect()->back()->with('success', 'Account deleted successfully'); 

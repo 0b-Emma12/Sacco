@@ -3,73 +3,82 @@
 @section('title', 'Expenses')
 
 @section('content')
-<div class="flex flex-col gap-6 mx-auto w-full max-w-7xl">
+<div class="mx-auto w-full max-w-7xl flex flex-col gap-6">
     
-    <!-- PAGE HEADER -->
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
-        <div>
-            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Management</div>
-            <h1 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Expenses</h1>
-        </div>
-        <div class="flex items-center gap-3">
-            <a href="{{ route('expenses.create') }}" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#38CE3C] border border-[#38CE3C] rounded-xl hover:bg-[#2cb030] transition shadow-sm">
-                <i data-lucide="plus" class="w-4 h-4"></i> Record Expense
-            </a>
-        </div>
-    </div>
+    <x-page-header
+        eyebrow="Management"
+        title="Expenses"
+        subtitle="Operating expenses awaiting approval or already posted to the ledger.">
+        <a href="{{ route('expenses.create') }}" class="h-10 px-4 rounded-xl bg-[#38CE3C] hover:bg-[#2cb030] text-white text-sm font-semibold shadow-sm inline-flex items-center gap-2 transition">
+            <x-icon name="plus" class="w-4 h-4"/> Record expense
+        </a>
+    </x-page-header>
 
     @if(session('success'))
-        <div class="bg-[#38CE3C]/10 text-[#38CE3C] p-4 rounded-xl text-sm border border-[#38CE3C]/20 font-semibold">
+        <div class="p-4 text-sm text-[#38CE3C] font-semibold rounded-xl bg-[#38CE3C]/10 border border-[#38CE3C]/20" role="alert">
             {{ session('success') }}
         </div>
     @endif
 
-    <!-- DATA TABLE -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden dark:bg-slate-900 dark:border-slate-800">
-        <div class="p-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">All Expenses</h3>
-            <div class="relative">
-                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
-                <input type="text" placeholder="Search description..." class="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200">
-            </div>
-        </div>
-        
+    <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <x-stat-card label="Expenses" :value="number_format($summary['count'])" meta="Matching the current filter" icon="receipt" tone="blue"/>
+        <x-stat-card label="Total value" :value="'UGX '.number_format($summary['total'], 2)" meta="All recorded expenses" icon="coins" tone="purple"/>
+        <x-stat-card label="Approved" :value="'UGX '.number_format($summary['approved'], 2)" meta="Posted to the ledger" icon="check-circle" tone="green"/>
+        <x-stat-card label="Pending" :value="number_format($summary['pending'])" meta="Awaiting management approval" icon="clock" tone="amber"/>
+    </div>
+
+    <x-panel title="Expense register" subtitle="Newest expenses first, fifteen per page." icon="receipt">
+        <x-slot name="actions">
+            <form method="GET" action="{{ route('expenses.index') }}" class="flex flex-wrap items-center gap-2 m-0">
+                <div class="relative">
+                    <x-icon name="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                    <input type="search" name="q" value="{{ request('q') }}"
+                           placeholder="Search description or category..."
+                           class="h-10 w-full sm:w-64 pl-9 pr-3 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100">
+                </div>
+                <button type="submit" class="h-10 px-4 rounded-xl bg-[#181824] text-white text-sm font-semibold hover:bg-slate-700 transition dark:bg-white dark:text-slate-900">Search</button>
+                @if(request('q'))
+                    <a href="{{ route('expenses.index') }}" class="h-10 px-3 inline-flex items-center rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition dark:border-slate-700 dark:text-slate-300">Clear</a>
+                @endif
+            </form>
+        </x-slot>
+
         <div class="w-full overflow-x-auto">
-            <table class="w-full text-left text-sm whitespace-nowrap">
-                <thead>
-                    <tr class="bg-slate-50 dark:bg-slate-950/50 text-slate-500 text-xs uppercase tracking-wider">
-                        <th class="px-6 py-4 font-semibold">Expense ID</th>
-                        <th class="px-6 py-4 font-semibold">Description</th>
-                        <th class="px-6 py-4 font-semibold">Category</th>
-                        <th class="px-6 py-4 font-semibold">Amount</th>
-                        <th class="px-6 py-4 font-semibold">Date</th>
-                        <th class="px-6 py-4 font-semibold">Posted By</th>
-                        <th class="px-6 py-4 font-semibold">Status</th>
-                        <th class="px-6 py-4 font-semibold text-right">Actions</th>
+            <table class="w-full text-left">
+                <thead class="bg-slate-50/50 dark:bg-slate-950/50">
+                    <tr class="border-b border-slate-100 dark:border-slate-800">
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Expense ID</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Description</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Category</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Amount</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Posted by</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($expenses as $expense)
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition">
-                        <td class="px-6 py-4 font-medium text-[#38CE3C] hover:underline cursor-pointer">
-                            <a href="{{ route('expenses.show', $expense->id) }}">
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                        <td class="px-5 py-4">
+                            <a href="{{ route('expenses.show', $expense->id) }}" class="text-sm font-semibold text-[#38CE3C] hover:underline">
                                 #{{ str_pad($expense->id, 4, '0', STR_PAD_LEFT) }}
                             </a>
                         </td>
-                        <td class="px-6 py-4 text-slate-800 dark:text-slate-200">
+                        <td class="px-5 py-4 text-sm text-slate-800 dark:text-slate-200">
                             {{ $expense->description }}
                         </td>
-                        <td class="px-6 py-4 text-slate-600 dark:text-slate-400">{{ $expense->category }}</td>
-                        <td class="px-6 py-4 font-semibold text-slate-800 dark:text-slate-200">
+                        <td class="px-5 py-4 text-sm text-slate-600 dark:text-slate-400">{{ $expense->category }}</td>
+                        <td class="px-5 py-4 text-sm font-semibold text-slate-800 dark:text-slate-200">
                             UGX {{ number_format($expense->amount, 2) }}
                         </td>
-                        <td class="px-6 py-4 text-slate-600 dark:text-slate-400">
+                        <td class="px-5 py-4 text-sm text-slate-600 dark:text-slate-400">
                             {{ $expense->date ? $expense->date->format('M d, Y') : 'N/A' }}
                         </td>
-                        <td class="px-6 py-4 text-slate-600 dark:text-slate-400">
+                        <td class="px-5 py-4 text-sm text-slate-600 dark:text-slate-400">
                             {{ $expense->created_by_name }}
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-5 py-4">
                             @php
                                 $st = strtolower($expense->status);
                                 $badgeClass = $st === 'approved'
@@ -82,31 +91,56 @@
                                 {{ ucfirst($expense->status) }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-right flex justify-end gap-2">
-                            <a href="{{ route('expenses.show', $expense->id) }}" class="text-slate-400 hover:text-[#38CE3C] transition" title="View"><i data-lucide="eye" class="w-4 h-4"></i></a>
-                            <form action="{{ route('expenses.destroy', $expense->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this expense?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-slate-400 hover:text-[#FF4D6B] transition" title="Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                            </form>
+                        <td class="px-5 py-4 text-right whitespace-nowrap">
+                            <a href="{{ route('expenses.show', $expense->id) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-[#38CE3C]/10 text-[#38CE3C] text-xs font-semibold hover:bg-[#38CE3C]/20 transition" title="View">View</a>
+                            <a href="#delete-expense-{{ $expense->id }}" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-semibold hover:bg-slate-200 transition dark:bg-slate-800 dark:text-slate-300" title="Delete">Delete</a>
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="8" class="px-6 py-12">
-                            <div class="flex flex-col items-center justify-center text-center">
-                                <div class="h-14 w-14 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mb-3 dark:bg-slate-800/50">
-                                    <i data-lucide="receipt" class="w-7 h-7"></i>
-                                </div>
-                                <h4 class="text-slate-700 dark:text-slate-200 font-bold mb-1">No expenses recorded yet</h4>
-                                <p class="text-slate-500 text-xs">Start by recording an operating expense.</p>
-                            </div>
-                        </td>
-                    </tr>
+                        <x-empty-state colspan="8" icon="receipt" title="No expenses match this filter"
+                                       message="Try a different search term, or record the first operating expense.">
+                            <a href="{{ route('expenses.create') }}" class="h-9 px-4 rounded-lg bg-[#38CE3C] text-white text-xs font-semibold inline-flex items-center gap-2 hover:bg-[#2cb030] transition">
+                                <x-icon name="plus" class="w-3.5 h-3.5"/> Record expense
+                            </a>
+                        </x-empty-state>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        @if($expenses->hasPages())
+            <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+                {{ $expenses->links() }}
+            </div>
+        @endif
+    </x-panel>
+</div>
+
+@foreach($expenses as $expense)
+<div id="delete-expense-{{ $expense->id }}" class="modal">
+    <a href="#" class="modal-overlay" aria-label="Close"></a>
+    <div class="modal-card bg-white dark:bg-[#181824] rounded-2xl shadow-xl p-6 border border-slate-200/80 dark:border-[#272738]">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="h-10 w-10 rounded-xl bg-[#FF4D6B]/10 text-[#FF4D6B] flex items-center justify-center">
+                <x-icon name="alert-triangle" class="w-5 h-5"/>
+            </span>
+            <div>
+                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Delete expense?</h3>
+                <p class="text-xs text-slate-500">This action cannot be undone.</p>
+            </div>
+        </div>
+        <p class="text-xs text-slate-500 mb-6">
+            #{{ str_pad($expense->id, 4, '0', STR_PAD_LEFT) }} — {{ $expense->description }} (UGX {{ number_format($expense->amount, 2) }})
+        </p>
+        <div class="flex justify-end gap-3">
+            <a href="#" class="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">Cancel</a>
+            <form action="{{ route('expenses.destroy', $expense->id) }}" method="POST">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-[#FF4D6B] rounded-xl hover:bg-[#e63e5c] transition">Delete Expense</button>
+            </form>
+        </div>
     </div>
 </div>
+@endforeach
 @endsection

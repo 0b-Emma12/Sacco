@@ -42,4 +42,36 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function getRoleLabelAttribute(): string
+    {
+        return [
+            'AD' => 'Administrator',
+            'MA' => 'Manager',
+            'OP' => 'Operation Manager',
+            'FI' => 'Finance Officer',
+            'LO' => 'Loan Officer',
+            'AC' => 'Accountant',
+        ][$this->role] ?? (string) $this->role;
+    }
+
+    public function canApproveLoans(): bool
+    {
+        return in_array($this->role, ['AD', 'MA'], true);
+    }
+
+    public function canDisburseLoans(): bool
+    {
+        return in_array($this->role, ['AD', 'MA', 'FI'], true);
+    }
+
+    public function canAppraiseLoans(): bool
+    {
+        return in_array($this->role, ['AD', 'MA', 'LO'], true);
+    }
+
+    public function canVerifyKyc(): bool
+    {
+        return in_array($this->role, ['AD', 'MA', 'OP'], true);
+    }
 }

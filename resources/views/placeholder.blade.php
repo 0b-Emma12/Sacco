@@ -9,7 +9,7 @@
         </div>
     </div>
     <div class="bg-white p-12 text-center rounded-2xl shadow-sm border border-slate-100 dark:bg-slate-900 dark:border-slate-800">
-        <i data-lucide="wrench" class="w-16 h-16 mx-auto text-slate-300 mb-4"></i>
+        <x-icon name="wrench" class="w-16 h-16 mx-auto text-slate-300 mb-4"/>
         <h2 class="text-xl font-bold text-slate-600 dark:text-slate-300">{{ $title }} UI Under Construction</h2>
         <p class="text-slate-500 mt-2">This route has been mapped successfully. The data table layout will be built next.</p>
     </div>

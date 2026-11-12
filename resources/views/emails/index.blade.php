@@ -9,7 +9,7 @@
             <h1 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Email Notifications</h1>
         </div>
         <a href="{{ route('emails.create') }}" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#38CE3C] border border-[#38CE3C] rounded-xl hover:bg-[#2cb030] transition shadow-sm">
-            <i data-lucide="plus" class="w-4 h-4"></i> New Email
+            <x-icon name="plus" class="w-4 h-4"/> New Email
         </a>
     </div>
 
@@ -17,7 +17,7 @@
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 dark:bg-slate-900 dark:border-slate-800">
         <div class="flex flex-col items-center justify-center text-center">
             <div class="h-16 w-16 rounded-2xl bg-[#8E32E9]/10 flex items-center justify-center mb-4">
-                <i data-lucide="send" class="w-8 h-8 text-[#8E32E9]"></i>
+                <x-icon name="send" class="w-8 h-8 text-[#8E32E9]"/>
             </div>
             <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">Email Notification Centre</h3>
             <p class="text-sm text-slate-500 max-w-md mx-auto mb-6">
@@ -26,15 +26,15 @@
             </p>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-lg">
                 <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-center">
-                    <i data-lucide="file-text" class="w-5 h-5 text-[#38CE3C] mx-auto mb-2"></i>
+                    <x-icon name="file-text" class="w-5 h-5 text-[#38CE3C] mx-auto mb-2"/>
                     <div class="text-xs font-semibold text-slate-600 dark:text-slate-400">Account Statements</div>
                 </div>
                 <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-center">
-                    <i data-lucide="bell" class="w-5 h-5 text-[#8E32E9] mx-auto mb-2"></i>
+                    <x-icon name="bell" class="w-5 h-5 text-[#8E32E9] mx-auto mb-2"/>
                     <div class="text-xs font-semibold text-slate-600 dark:text-slate-400">Loan Alerts</div>
                 </div>
                 <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-center">
-                    <i data-lucide="trending-up" class="w-5 h-5 text-[#FFDE73] mx-auto mb-2"></i>
+                    <x-icon name="trending-up" class="w-5 h-5 text-[#FFDE73] mx-auto mb-2"/>
                     <div class="text-xs font-semibold text-slate-600 dark:text-slate-400">Dividend Reports</div>
                 </div>
             </div>

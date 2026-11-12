@@ -2,121 +2,141 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Member;
-use App\Models\Account;
+use App\Models\JournalEntry;
 use App\Models\Loan;
+use App\Models\Member;
 use App\Models\Transaction;
+use App\Services\LedgerService;
+use App\Services\RepaymentScheduleService;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // 1. Top-Level KPIs
-        $totalMemberSavings = Member::sum('total_savings');
-        $totalShareCapital = Member::sum('share_capital');
-        $activeMembers = Member::where('status', 'Active')->count();
-        $grossLoanPortfolio = Loan::whereIn('status', ['approved', 'disbursed', 'defaulted'])->sum('principal_amount');
-        
-        // 2. Asset Breakdown (Calculating Cash based on actual transactions)
-        // Cash = Total Deposits + Total Shares - Withdrawals - Loans Disbursed + Loan Repayments
-        $totalDeposits = Transaction::where('transaction_type', 'deposit')->sum('amount');
-        $totalWithdrawals = Transaction::where('transaction_type', 'withdrawal')->sum('amount');
-        $cashAndBank = max(0, $totalDeposits - $totalWithdrawals);
-        
-        // Since we don't have an investments/fixed assets module yet, these are 0
-        $investments = 0;
-        $fixedAssets = 0;
-        $accruedInterest = Loan::whereIn('status', ['disbursed'])->sum('interest_amount');
-        
-        $totalAssets = $grossLoanPortfolio + $cashAndBank + $investments + $fixedAssets + $accruedInterest;
+        $metrics = $this->metrics();
 
-        // 3. Liabilities & Equity
-        // We only have real member savings and share capital.
-        $statutoryReserve = 0;
-        $externalBorrowings = 0;
-        $accountsPayable = 0;
-        // Retained earnings balances the accounting equation (Assets = Liabilities + Equity)
-        $retainedEarnings = $totalAssets - ($totalMemberSavings + $totalShareCapital + $statutoryReserve + $externalBorrowings + $accountsPayable); 
-
-        // 4. Income & Revenue (YTD)
-        $interestIncome = Transaction::where('transaction_type', 'deposit')->where(function($q) {
-            $q->where('narration', 'like', '%interest%')->orWhere('narration', 'like', '%loan repayment%');
-        })->sum('amount');
-        
-        $feesIncome = Transaction::where('transaction_type', 'deposit')->where('narration', 'like', '%Fee%')->sum('amount');
-        $investmentIncome = 0;
-        $otherIncome = 0;
-        $grossIncome = $interestIncome + $feesIncome + $investmentIncome + $otherIncome;
-
-        $interestPaid = Transaction::where('transaction_type', 'withdrawal')->where('narration', 'like', '%dividend%')->sum('amount');
-        $operationalExpenses = Transaction::where('transaction_type', 'withdrawal')->where('narration', 'like', '%expense%')->sum('amount');
-        
-        // Defaulted loans minus recovered amounts
-        $loanLossProvision = Loan::where('status', 'defaulted')->sum('principal_amount'); 
-        
-        $netSurplus = $grossIncome - ($interestPaid + $operationalExpenses + $loanLossProvision);
-
-        // 5. Portfolio Quality & Risk
-        // Real PAR > 30 days (defaulted loans percentage)
-        $nplAmount = Loan::where('status', 'defaulted')->sum('principal_amount');
-        $parRatio = $grossLoanPortfolio > 0 ? ($nplAmount / $grossLoanPortfolio) * 100 : 0;
-        $parRatio = round($parRatio, 1);
-        
-        $provisionCoverage = $nplAmount > 0 ? round(($loanLossProvision / $nplAmount) * 100, 1) : 0;
-        
-        $liquidityRatio = $totalMemberSavings > 0 ? (($cashAndBank + $investments) / $totalMemberSavings) * 100 : 0;
-        
-        $coreCapital = $totalShareCapital + $statutoryReserve + $retainedEarnings;
-        $capitalAdequacy = $totalAssets > 0 ? ($coreCapital / $totalAssets) * 100 : 0;
-
-        // 6. Recent Activities & Records for Stellar Dashboard Widgets
         $recentTransactions = Transaction::latest()->take(6)->get();
         $recentLoans = Loan::with('member')->latest()->take(5)->get();
         $recentMembers = Member::latest()->take(5)->get();
         $totalMembersCount = Member::count();
         $totalLoansCount = Loan::count();
+        $totalTransactionsCount = Transaction::count();
         $pendingLoansCount = Loan::whereIn('status', ['submitted', 'under_review'])->count();
 
-        return view('dashboard', compact(
+        // Monthly performance series (current calendar year)
+        $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        $monthlyDeposits = array_fill(0, 12, 0.0);
+        $monthlyLoans = array_fill(0, 12, 0.0);
+        $monthlyRepayments = array_fill(0, 12, 0.0);
+        $currentYear = (int) now()->year;
+
+        $yearTransactions = Transaction::whereYear('created_at', $currentYear)->get(['amount', 'transaction_type', 'created_at']);
+        foreach ($yearTransactions as $tx) {
+            $month = (int) $tx->created_at->format('n') - 1;
+            if ($tx->transaction_type === 'deposit') {
+                $monthlyDeposits[$month] += (float) $tx->amount;
+            }
+        }
+
+        $yearLoans = Loan::whereYear('disbursed_at', $currentYear)
+            ->whereNotNull('disbursed_at')
+            ->get(['principal_amount', 'disbursed_at']);
+        foreach ($yearLoans as $loan) {
+            $month = (int) $loan->disbursed_at->format('n') - 1;
+            $monthlyLoans[$month] += (float) $loan->principal_amount;
+        }
+
+        $yearRepayments = \App\Models\LoanRepayment::whereYear('created_at', $currentYear)->get(['amount_paid', 'created_at']);
+        foreach ($yearRepayments as $repayment) {
+            $month = (int) $repayment->created_at->format('n') - 1;
+            $monthlyRepayments[$month] += (float) $repayment->amount_paid;
+        }
+
+        $monthlyPerformance = [];
+        foreach ($monthNames as $index => $name) {
+            $monthlyPerformance[] = [
+                'month' => $name,
+                'deposits' => round($monthlyDeposits[$index], 2),
+                'loans' => round($monthlyLoans[$index], 2),
+                'repayments' => round($monthlyRepayments[$index], 2),
+            ];
+        }
+
+        return view('dashboard', array_merge($metrics, compact(
+            'recentTransactions', 'recentLoans', 'recentMembers', 'totalMembersCount',
+            'totalLoansCount', 'totalTransactionsCount', 'pendingLoansCount', 'monthlyPerformance'
+        )));
+    }
+
+    /**
+     * All headline figures are derived from the double-entry ledger and the
+     * UMRA reporting views; member balances are only used before the ledger
+     * has been populated (fresh installations).
+     */
+    private function metrics(): array
+    {
+        $hasLedger = JournalEntry::exists();
+
+        $totalMemberSavings = $hasLedger ? LedgerService::accountBalance('2000') : (float) Member::sum('total_savings');
+        $totalShareCapital = $hasLedger ? LedgerService::accountBalance('3000') : (float) Member::sum('share_capital');
+
+        $cashAndBank = LedgerService::accountBalance('1000') + LedgerService::accountBalance('1300');
+        $investments = 0.0;
+        $fixedAssets = 0.0;
+        $accountsPayable = LedgerService::accountBalance('2100');
+
+        $portfolioFromLedger = LedgerService::accountBalance('1200');
+        $portfolioFromLoans = (float) Loan::whereIn('status', ['disbursed', 'partially_paid', 'defaulted'])
+            ->get()
+            ->sum(fn ($loan) => RepaymentScheduleService::principalOutstanding($loan));
+        $grossLoanPortfolio = $hasLedger && $portfolioFromLedger > 0 ? $portfolioFromLedger : $portfolioFromLoans;
+
+        $accruedInterest = 0.0;
+        $totalAssets = $grossLoanPortfolio + $cashAndBank + $investments + $fixedAssets + $accruedInterest;
+
+        $retainedEarnings = $totalAssets - $totalMemberSavings - $totalShareCapital - $accountsPayable;
+
+        $interestIncome = LedgerService::accountBalance('4000');
+        $feesIncome = LedgerService::accountBalance('4100');
+        $penaltyIncome = LedgerService::accountBalance('4200');
+        $investmentIncome = 0.0;
+        $otherIncome = $penaltyIncome;
+        $grossIncome = $interestIncome + $feesIncome + $investmentIncome + $otherIncome;
+
+        $interestPaid = LedgerService::accountBalance('5200');
+        $operationalExpenses = LedgerService::accountBalance('5000') + LedgerService::accountBalance('5100');
+        $loanLossProvision = (float) Loan::where('status', 'defaulted')->sum('principal_amount');
+        $netSurplus = $grossIncome - ($interestPaid + $operationalExpenses);
+
+        $activeMembers = Member::where('status', 'Active')->count();
+
+        $par = DB::table('v_par')->first();
+        $liquidityView = DB::table('v_liquidity')->first();
+        $capitalView = DB::table('v_capital_adequacy')->first();
+
+        $nplAmount = (float) Loan::where('status', 'defaulted')->sum('principal_amount');
+        $parRatio = $par ? round((float) $par->par30_ratio, 1) : 0.0;
+        $provisionCoverage = $nplAmount > 0 ? round(($loanLossProvision / $nplAmount) * 100, 1) : 0.0;
+        $liquidityRatio = $liquidityView
+            ? round((float) $liquidityView->liquidity_ratio, 1)
+            : ($totalMemberSavings > 0 ? round((($cashAndBank + $investments) / $totalMemberSavings) * 100, 1) : 0.0);
+        $capitalAdequacy = $capitalView ? round((float) $capitalView->capital_adequacy_ratio, 1) : 0.0;
+
+        return compact(
             'totalMemberSavings', 'totalShareCapital', 'activeMembers', 'grossLoanPortfolio',
             'cashAndBank', 'investments', 'fixedAssets', 'accruedInterest', 'totalAssets',
-            'statutoryReserve', 'externalBorrowings', 'accountsPayable', 'retainedEarnings',
+            'accountsPayable', 'retainedEarnings',
             'interestIncome', 'feesIncome', 'investmentIncome', 'otherIncome', 'grossIncome',
             'interestPaid', 'operationalExpenses', 'loanLossProvision', 'netSurplus',
-            'parRatio', 'nplAmount', 'provisionCoverage', 'liquidityRatio', 'capitalAdequacy',
-            'recentTransactions', 'recentLoans', 'recentMembers', 'totalMembersCount',
-            'totalLoansCount', 'pendingLoansCount'
-        ));
+            'parRatio', 'nplAmount', 'provisionCoverage', 'liquidityRatio', 'capitalAdequacy'
+        );
     }
 
     public function exportCsv()
     {
-        // 1. Recalculate metrics
-        $totalMemberSavings = Member::sum('total_savings');
-        $totalShareCapital = Member::sum('share_capital');
-        $grossLoanPortfolio = Loan::whereIn('status', ['approved', 'disbursed', 'defaulted'])->sum('principal_amount');
-        
-        $totalDeposits = Transaction::where('transaction_type', 'deposit')->sum('amount');
-        $totalWithdrawals = Transaction::where('transaction_type', 'withdrawal')->sum('amount');
-        $cashAndBank = max(0, $totalDeposits - $totalWithdrawals);
-        $accruedInterest = Loan::whereIn('status', ['disbursed'])->sum('interest_amount');
-        $totalAssets = $grossLoanPortfolio + $cashAndBank + $accruedInterest;
+        $m = $this->metrics();
 
-        $retainedEarnings = $totalAssets - ($totalMemberSavings + $totalShareCapital); 
-
-        $interestIncome = Transaction::where('transaction_type', 'deposit')->where(function($q) {
-            $q->where('narration', 'like', '%interest%')->orWhere('narration', 'like', '%loan repayment%');
-        })->sum('amount');
-        $feesIncome = Transaction::where('transaction_type', 'deposit')->where('narration', 'like', '%Fee%')->sum('amount');
-        $grossIncome = $interestIncome + $feesIncome;
-
-        $interestPaid = Transaction::where('transaction_type', 'withdrawal')->where('narration', 'like', '%dividend%')->sum('amount');
-        $operationalExpenses = Transaction::where('transaction_type', 'withdrawal')->where('narration', 'like', '%expense%')->sum('amount');
-        $loanLossProvision = Loan::where('status', 'defaulted')->sum('principal_amount'); 
-        $netSurplus = $grossIncome - ($interestPaid + $operationalExpenses + $loanLossProvision);
-
-        // 2. Generate CSV
         $filename = "sacco_financial_data_" . date('Y_m_d') . ".csv";
         $headers = [
             "Content-type"        => "text/csv",
@@ -127,27 +147,31 @@ class DashboardController extends Controller
         ];
 
         $columns = ['Category', 'Metric', 'Amount (UGX)'];
-        $callback = function() use($columns, $totalMemberSavings, $totalShareCapital, $grossLoanPortfolio, $cashAndBank, $accruedInterest, $totalAssets, $retainedEarnings, $interestIncome, $feesIncome, $grossIncome, $interestPaid, $operationalExpenses, $loanLossProvision, $netSurplus) {
+        $callback = function() use ($columns, $m) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
-            
-            fputcsv($file, ['ASSETS', 'Gross Loan Portfolio', $grossLoanPortfolio]);
-            fputcsv($file, ['ASSETS', 'Cash & Bank Balances', $cashAndBank]);
-            fputcsv($file, ['ASSETS', 'Accrued Interest', $accruedInterest]);
-            fputcsv($file, ['ASSETS', 'TOTAL ASSETS', $totalAssets]);
-            
-            fputcsv($file, ['LIABILITIES & EQUITY', 'Total Member Savings', $totalMemberSavings]);
-            fputcsv($file, ['LIABILITIES & EQUITY', 'Total Share Capital', $totalShareCapital]);
-            fputcsv($file, ['LIABILITIES & EQUITY', 'Retained Earnings', $retainedEarnings]);
-            fputcsv($file, ['LIABILITIES & EQUITY', 'TOTAL LIABILITIES & EQUITY', $totalAssets]);
 
-            fputcsv($file, ['INCOME STATEMENT', 'Interest Income', $interestIncome]);
-            fputcsv($file, ['INCOME STATEMENT', 'Fees Income', $feesIncome]);
-            fputcsv($file, ['INCOME STATEMENT', 'Gross Total Income', $grossIncome]);
-            fputcsv($file, ['INCOME STATEMENT', 'Interest Paid (Dividends)', "-$interestPaid"]);
-            fputcsv($file, ['INCOME STATEMENT', 'Operational Expenses', "-$operationalExpenses"]);
-            fputcsv($file, ['INCOME STATEMENT', 'Loan Loss Provisioning', "-$loanLossProvision"]);
-            fputcsv($file, ['INCOME STATEMENT', 'NET SURPLUS (PROFIT)', $netSurplus]);
+            fputcsv($file, ['ASSETS', 'Gross Loan Portfolio', $m['grossLoanPortfolio']]);
+            fputcsv($file, ['ASSETS', 'Cash & Bank Balances', $m['cashAndBank']]);
+            fputcsv($file, ['ASSETS', 'Accrued Interest', $m['accruedInterest']]);
+            fputcsv($file, ['ASSETS', 'TOTAL ASSETS', $m['totalAssets']]);
+
+            fputcsv($file, ['LIABILITIES & EQUITY', 'Total Member Savings', $m['totalMemberSavings']]);
+            fputcsv($file, ['LIABILITIES & EQUITY', 'Total Share Capital', $m['totalShareCapital']]);
+            fputcsv($file, ['LIABILITIES & EQUITY', 'Retained Earnings', $m['retainedEarnings']]);
+            fputcsv($file, ['LIABILITIES & EQUITY', 'TOTAL LIABILITIES & EQUITY', $m['totalAssets']]);
+
+            fputcsv($file, ['INCOME STATEMENT', 'Interest Income', $m['interestIncome']]);
+            fputcsv($file, ['INCOME STATEMENT', 'Fees Income', $m['feesIncome']]);
+            fputcsv($file, ['INCOME STATEMENT', 'Penalty Income', $m['otherIncome']]);
+            fputcsv($file, ['INCOME STATEMENT', 'Gross Total Income', $m['grossIncome']]);
+            fputcsv($file, ['INCOME STATEMENT', 'Interest Paid (Savings)', "-{$m['interestPaid']}"]);
+            fputcsv($file, ['INCOME STATEMENT', 'Operational Expenses', "-{$m['operationalExpenses']}"]);
+            fputcsv($file, ['INCOME STATEMENT', 'NET SURPLUS (PROFIT)', $m['netSurplus']]);
+
+            fputcsv($file, ['PRUDENTIAL', 'PAR > 30 Days (%)', $m['parRatio']]);
+            fputcsv($file, ['PRUDENTIAL', 'Liquidity Ratio (%)', $m['liquidityRatio']]);
+            fputcsv($file, ['PRUDENTIAL', 'Capital Adequacy (%)', $m['capitalAdequacy']]);
 
             fclose($file);
         };

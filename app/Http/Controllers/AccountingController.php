@@ -81,7 +81,7 @@ class AccountingController extends Controller
                 'reference' => $request->reference,
                 'description' => $request->description,
                 'posted_at' => $request->posted_at,
-                'posted_by_name' => auth()->user() ? auth()->user()->name : 'System',
+                'posted_by_name' => auth()->user() ? (auth()->user()->username ?? auth()->user()->email) : 'System',
             ]);
 
             foreach ($request->lines as $line) {
@@ -118,8 +118,14 @@ class AccountingController extends Controller
 
     public function destroy($id)
     {
-        $journal = JournalEntry::findOrFail($id);
-        $journal->delete();
-        return redirect()->route('accounting.index')->with('success', 'Deleted successfully');
+        $journal = JournalEntry::with('lineItems')->findOrFail($id);
+
+        try {
+            \App\Services\LedgerService::reverse($journal, 'Reversed by '.((auth()->user()->username ?? 'System')));
+        } catch (\RuntimeException $e) {
+            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+        }
+
+        return redirect()->route('accounting.index')->with('success', 'Journal entry reversed. The original entry is retained for audit.');
     }
 }

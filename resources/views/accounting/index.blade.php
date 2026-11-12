@@ -1,140 +1,147 @@
 @extends('layouts.app')
 @section('title', 'General Ledger')
 @section('content')
-<div class="mx-auto w-full max-w-6xl flex flex-col gap-6">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">General Ledger</h1>
-            <p class="text-sm text-slate-500 mt-1">View all double-entry accounting records across the SACCO.</p>
-        </div>
-        <div class="flex gap-3">
-            <a href="{{ route('accounting.create') }}" class="flex items-center gap-2 px-4 py-2 bg-[#38CE3C] hover:bg-[#2cb030] text-white rounded-xl shadow-xs transition font-semibold text-sm">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-                New Entry
-            </a>
-            <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 bg-[#8E32E9]/10 text-[#8E32E9] rounded-xl hover:bg-[#8E32E9]/20 transition font-semibold text-sm dark:bg-[#8E32E9]/20 dark:text-[#8E32E9] print-hidden">
-                <i data-lucide="printer" class="w-4 h-4"></i>
-                Print GL
-            </button>
-        </div>
-    </div>
-
+@php
+    $isBalanced = abs($totalDebit - $totalCredit) < 0.01;
+@endphp
+<div class="mx-auto w-full max-w-7xl flex flex-col gap-6">
     @if(session('success'))
-        <div class="p-4 mb-4 text-sm font-semibold text-[#38CE3C] bg-[#38CE3C]/10 border border-[#38CE3C]/20 rounded-xl print-hidden" role="alert">
+        <div class="p-4 text-sm font-semibold text-[#38CE3C] bg-[#38CE3C]/10 border border-[#38CE3C]/20 rounded-xl print-hidden" role="alert">
             {{ session('success') }}
         </div>
     @endif
 
+    <x-page-header
+        eyebrow="Accounting"
+        title="General Ledger"
+        subtitle="Double-entry records and the live trial balance across every SACCO account.">
+        <a href="{{ route('accounting.create') }}" class="h-10 px-4 rounded-xl bg-[#38CE3C] hover:bg-[#2cb030] text-white text-sm font-semibold shadow-sm inline-flex items-center gap-2 transition">
+            <x-icon name="plus" class="w-4 h-4"/>
+            New entry
+        </a>
+        <a href="{{ request()->fullUrlWithQuery(['print' => 1]) }}" class="h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 dark:bg-[#181824] dark:border-[#272738] dark:text-slate-200 inline-flex items-center gap-2 transition print-hidden">
+            <x-icon name="printer" class="w-4 h-4"/>
+            Print GL
+        </a>
+    </x-page-header>
+
+    <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <x-stat-card label="Ledger accounts" :value="number_format(count($trialBalance))" meta="Accounts with posted balances" icon="book-open" tone="blue"/>
+        <x-stat-card label="Total debits" :value="'UGX '.number_format($totalDebit, 2)" meta="Debit side of the trial balance" icon="arrow-down-left" tone="green"/>
+        <x-stat-card label="Total credits" :value="'UGX '.number_format($totalCredit, 2)" meta="Credit side of the trial balance" icon="arrow-up-right" tone="coral"/>
+        <x-stat-card label="Journal entries" :value="number_format($journals->total())" meta="Posted to the register" icon="file-text" tone="purple"/>
+    </div>
+
     <!-- Trial Balance Summary -->
-    <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden dark:bg-[#181824] dark:border-[#272738] mb-2">
-        <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-            <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Trial Balance Snapshot</h3>
-            <div class="text-xs px-3 py-1 bg-slate-100 text-slate-600 rounded-full dark:bg-slate-800 dark:text-slate-300 font-semibold">
-                Live Status: 
-                @if(abs($totalDebit - $totalCredit) < 0.01)
-                    <span class="text-[#38CE3C] font-bold ml-1">Balanced</span>
-                @else
-                    <span class="text-[#FF4D6B] font-bold ml-1">Unbalanced</span>
-                @endif
-            </div>
-        </div>
+    <x-panel title="Trial Balance Snapshot" subtitle="Chart of accounts balances, debit and credit side." icon="book-open">
+        <x-slot name="actions">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border {{ $isBalanced ? 'bg-[#38CE3C]/10 text-[#38CE3C] border-[#38CE3C]/20' : 'bg-[#FF4D6B]/10 text-[#FF4D6B] border-[#FF4D6B]/20' }}">
+                <span class="h-1.5 w-1.5 rounded-full {{ $isBalanced ? 'bg-[#38CE3C]' : 'bg-[#FF4D6B]' }}"></span>
+                {{ $isBalanced ? 'Live status: Balanced' : 'Live status: Unbalanced' }}
+            </span>
+        </x-slot>
+
         <div class="overflow-x-auto w-full">
-            <table class="w-full text-left text-sm whitespace-nowrap">
-                <thead>
-                    <tr class="bg-slate-50 dark:bg-slate-950/50 text-slate-500 text-xs uppercase tracking-wider">
-                        <th class="px-6 py-4 font-semibold">Account Code</th>
-                        <th class="px-6 py-4 font-semibold">Account Name</th>
-                        <th class="px-6 py-4 font-semibold">Type</th>
-                        <th class="px-6 py-4 font-semibold text-right">Debit Balance</th>
-                        <th class="px-6 py-4 font-semibold text-right">Credit Balance</th>
+            <table class="w-full text-left whitespace-nowrap">
+                <thead class="bg-slate-50/50 dark:bg-slate-950/50">
+                    <tr class="border-b border-slate-100 dark:border-slate-800">
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Account code</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Account name</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Type</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider text-right">Debit balance</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider text-right">Credit balance</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($trialBalance as $account)
-                    <tr class="hover:bg-slate-50/50 transition">
-                        <td class="px-6 py-3 text-slate-600 font-medium">{{ $account['code'] }}</td>
-                        <td class="px-6 py-3 text-slate-800 dark:text-slate-200">{{ $account['name'] }}</td>
-                        <td class="px-6 py-3 text-slate-500">{{ $account['type'] }}</td>
-                        <td class="px-6 py-3 text-right font-medium text-[#38CE3C]">
-                            {{ $account['debit_total'] > 0 ? number_format($account['debit_total'], 2) : '-' }}
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                        <td class="px-5 py-4 text-sm font-mono text-slate-500 dark:text-slate-400">{{ $account['code'] }}</td>
+                        <td class="px-5 py-4 text-sm font-semibold text-slate-800 dark:text-slate-100">{{ $account['name'] }}</td>
+                        <td class="px-5 py-4">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">{{ $account['type'] }}</span>
                         </td>
-                        <td class="px-6 py-3 text-right font-medium text-[#FF4D6B]">
-                            {{ $account['credit_total'] > 0 ? number_format($account['credit_total'], 2) : '-' }}
+                        <td class="px-5 py-4 text-right text-sm font-bold text-[#38CE3C]">
+                            {{ $account['debit_total'] > 0 ? number_format($account['debit_total'], 2) : '—' }}
+                        </td>
+                        <td class="px-5 py-4 text-right text-sm font-bold text-[#FF4D6B]">
+                            {{ $account['credit_total'] > 0 ? number_format($account['credit_total'], 2) : '—' }}
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="5" class="px-6 py-8 text-center text-slate-500">No active accounts with balances found.</td>
-                    </tr>
+                    <x-empty-state colspan="5" icon="book-open" title="No accounts with balances"
+                                   message="Post a journal entry and the chart of accounts will populate this snapshot.">
+                        <a href="{{ route('accounting.create') }}" class="h-9 px-4 rounded-lg bg-[#38CE3C] text-white text-xs font-semibold inline-flex items-center gap-2 hover:bg-[#2cb030] transition">
+                            <x-icon name="plus" class="w-3.5 h-3.5"/> New entry
+                        </a>
+                    </x-empty-state>
                     @endforelse
                 </tbody>
                 @if(count($trialBalance) > 0)
-                <tfoot class="bg-slate-50 dark:bg-slate-950/50 border-t-2 border-slate-200 dark:border-slate-700">
+                <tfoot class="bg-slate-50/50 dark:bg-slate-950/50 border-t border-slate-200 dark:border-slate-700">
                     <tr>
-                        <td colspan="3" class="px-6 py-4 font-bold text-right text-slate-700 dark:text-slate-300">TOTALS:</td>
-                        <td class="px-6 py-4 font-bold text-right text-[#38CE3C]">UGX {{ number_format($totalDebit, 2) }}</td>
-                        <td class="px-6 py-4 font-bold text-right text-[#FF4D6B]">UGX {{ number_format($totalCredit, 2) }}</td>
+                        <td colspan="3" class="px-5 py-4 text-right text-[11px] font-bold text-slate-500 uppercase tracking-wider">Totals</td>
+                        <td class="px-5 py-4 text-right text-sm font-extrabold text-[#38CE3C]">UGX {{ number_format($totalDebit, 2) }}</td>
+                        <td class="px-5 py-4 text-right text-sm font-extrabold text-[#FF4D6B]">UGX {{ number_format($totalCredit, 2) }}</td>
                     </tr>
                 </tfoot>
                 @endif
             </table>
         </div>
-    </div>
+    </x-panel>
 
     <!-- Recent Journal Entries -->
-    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mt-4 mb-2">Recent Journal Entries</h3>
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden dark:bg-slate-900 dark:border-slate-800">
+    <x-panel title="Recent journal entries" subtitle="Newest postings first, ten per page." icon="arrow-left-right" tone="purple">
         @if($journals->isEmpty())
-            <div class="p-12 flex flex-col items-center justify-center text-center">
-                <div class="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 dark:bg-slate-800 text-slate-400">
-                    <i data-lucide="book-open" class="w-8 h-8"></i>
-                </div>
-                <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200">No Journal Entries Found</h3>
-                <p class="text-slate-500 mt-1 max-w-sm">When financial transactions like deposits or loans occur, they will automatically appear here as balanced journal entries.</p>
-                <a href="{{ route('accounting.create') }}" class="mt-4 px-4 py-2 bg-sacco text-white rounded-lg hover:bg-sacco-dark transition font-medium text-sm">Post First Entry</a>
-            </div>
+            <x-empty-state icon="book-open" title="No journal entries found"
+                           message="When financial transactions like deposits or loans occur, they will automatically appear here as balanced journal entries.">
+                <a href="{{ route('accounting.create') }}" class="h-9 px-4 rounded-lg bg-[#38CE3C] text-white text-xs font-semibold inline-flex items-center gap-2 hover:bg-[#2cb030] transition">
+                    <x-icon name="plus" class="w-3.5 h-3.5"/> Post first entry
+                </a>
+            </x-empty-state>
         @else
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-50 dark:bg-slate-950/50 border-b border-slate-100 dark:border-slate-800">
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Reference & Description</th>
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Account</th>
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Debit</th>
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Credit</th>
-                            <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right print-hidden">Actions</th>
+                    <thead class="bg-slate-50/50 dark:bg-slate-950/50">
+                        <tr class="border-b border-slate-100 dark:border-slate-800">
+                            <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                            <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Reference &amp; description</th>
+                            <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Account</th>
+                            <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider text-right">Debit</th>
+                            <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider text-right">Credit</th>
+                            <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider text-right print-hidden">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/50">
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                         @foreach($journals as $journal)
                             @foreach($journal->lineItems as $index => $line)
-                                <tr class="{{ $index === 0 ? 'bg-white dark:bg-slate-900 border-t-4 border-slate-100 dark:border-slate-800/50' : 'bg-slate-50/30 dark:bg-slate-900/50' }} hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors {{ $index === 0 ? 'border-t border-slate-200 dark:border-slate-700' : '' }}">
                                     @if($index === 0)
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-300 align-top" rowspan="{{ $journal->lineItems->count() }}">
-                                            {{ $journal->posted_at->format('M d, Y') }}
-                                            <div class="text-xs text-slate-400 mt-0.5">{{ $journal->posted_at->format('H:i') }}</div>
+                                        <td class="px-5 py-4 whitespace-nowrap align-top" rowspan="{{ $journal->lineItems->count() }}">
+                                            <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ $journal->posted_at->format('d M Y') }}</div>
+                                            <div class="text-[11px] text-slate-400">{{ $journal->posted_at->format('H:i') }}</div>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap align-top" rowspan="{{ $journal->lineItems->count() }}">
-                                            <div class="text-sm font-bold text-slate-800 dark:text-slate-200">{{ $journal->reference }}</div>
-                                            <div class="text-xs text-slate-500 mt-0.5 whitespace-pre-wrap">{{ $journal->description }}</div>
+                                        <td class="px-5 py-4 align-top max-w-72" rowspan="{{ $journal->lineItems->count() }}">
+                                            <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ $journal->reference }}</div>
+                                            <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 whitespace-pre-wrap">{{ $journal->description }}</div>
                                         </td>
                                     @endif
-                                    <td class="px-6 py-3 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 mr-2">
-                                            {{ $line->account_code }}
-                                        </span>
-                                        <span class="text-sm text-slate-600 dark:text-slate-300">{{ $line->account_name }}</span>
+                                    <td class="px-5 py-4 whitespace-nowrap">
+                                        <div class="flex items-center gap-2">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                                                {{ $line->account_code }}
+                                            </span>
+                                            <span class="text-sm text-slate-700 dark:text-slate-300">{{ $line->account_name }}</span>
+                                        </div>
                                     </td>
-                                    <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-medium text-[#38CE3C]">
-                                        {{ $line->debit > 0 ? number_format($line->debit, 2) : '-' }}
+                                    <td class="px-5 py-4 whitespace-nowrap text-right text-sm font-bold text-[#38CE3C]">
+                                        {{ $line->debit > 0 ? number_format($line->debit, 2) : '—' }}
                                     </td>
-                                    <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-medium text-[#FF4D6B]">
-                                        {{ $line->credit > 0 ? number_format($line->credit, 2) : '-' }}
+                                    <td class="px-5 py-4 whitespace-nowrap text-right text-sm font-bold text-[#FF4D6B]">
+                                        {{ $line->credit > 0 ? number_format($line->credit, 2) : '—' }}
                                     </td>
                                     @if($index === 0)
-                                        <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-medium align-top print-hidden" rowspan="{{ $journal->lineItems->count() }}">
-                                            <a href="{{ route('accounting.show', $journal->id) }}" class="text-sacco hover:underline">View</a>
+                                        <td class="px-5 py-4 whitespace-nowrap text-right align-top print-hidden" rowspan="{{ $journal->lineItems->count() }}">
+                                            <a href="{{ route('accounting.show', $journal->id) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-[#38CE3C]/10 text-[#38CE3C] text-xs font-semibold hover:bg-[#38CE3C]/20 transition">View</a>
                                         </td>
                                     @endif
                                 </tr>
@@ -149,6 +156,6 @@
             </div>
             @endif
         @endif
-    </div>
+    </x-panel>
 </div>
 @endsection

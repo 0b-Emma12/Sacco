@@ -7,10 +7,27 @@ use Illuminate\Http\Request;
 
 class DocumentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $documents = Document::latest()->paginate(10);
-        return view('documents.index', compact('documents'));
+        $query = Document::latest();
+
+        if ($search = trim((string) $request->input('q'))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $documents = $query->paginate(10)->withQueryString();
+
+        $stats = [
+            'total' => Document::count(),
+            'with_file' => Document::whereNotNull('file_path')->count(),
+            'without_file' => Document::whereNull('file_path')->count(),
+            'this_month' => Document::where('created_at', '>=', now()->startOfMonth())->count(),
+        ];
+
+        return view('documents.index', compact('documents', 'stats'));
     }
 
     public function create()
@@ -28,9 +45,7 @@ class DocumentController extends Controller
 
         $filePath = null;
         if ($request->hasFile('file')) {
-            // Stubbed file upload logic
-            // $filePath = $request->file('file')->store('documents', 'public');
-            $filePath = 'dummy/path/' . $request->file('file')->getClientOriginalName();
+            $filePath = $request->file('file')->store('documents', 'public');
         }
 
         Document::create([
@@ -66,8 +81,10 @@ class DocumentController extends Controller
 
         $filePath = $document->file_path;
         if ($request->hasFile('file')) {
-            // Stubbed file upload logic
-            $filePath = 'dummy/path/' . $request->file('file')->getClientOriginalName();
+            if ($document->file_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($document->file_path);
+            }
+            $filePath = $request->file('file')->store('documents', 'public');
         }
 
         $document->update([
@@ -82,9 +99,26 @@ class DocumentController extends Controller
     public function destroy($id)
     {
         $document = Document::findOrFail($id);
-        // If there was a real file path, we'd delete it here: Storage::disk('public')->delete($document->file_path);
+
+        if ($document->file_path) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($document->file_path);
+        }
+
         $document->delete();
 
         return redirect()->route('documents.index')->with('success', 'Document deleted successfully');
+    }
+
+    public function download($id)
+    {
+        $document = Document::findOrFail($id);
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+
+        abort_unless($document->file_path && $disk->exists($document->file_path), 404, 'The stored file for this document is unavailable.');
+
+        $extension = pathinfo($document->file_path, PATHINFO_EXTENSION);
+        $name = \Illuminate\Support\Str::slug($document->title) ?: 'document';
+
+        return $disk->download($document->file_path, $name . ($extension ? '.' . $extension : ''));
     }
 }

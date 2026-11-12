@@ -2,64 +2,84 @@
 @section('title', 'Loans')
 
 @section('content')
-<div class="flex flex-col gap-6 mx-auto w-full max-w-7xl">
+<div class="mx-auto w-full max-w-7xl flex flex-col gap-6">
     
-    <!-- PAGE HEADER -->
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
-        <div>
-            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Module</div>
-            <h1 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Loans</h1>
+    @if(session('success'))
+        <div class="p-4 text-sm text-[#38CE3C] font-semibold rounded-xl bg-[#38CE3C]/10 border border-[#38CE3C]/20" role="alert">
+            {{ session('success') }}
         </div>
-        <div class="flex items-center gap-3">
-            <a href="{{ route('loans.create') }}" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-sacco border border-sacco rounded hover:bg-sacco-dark transition">
-                <i data-lucide="plus" class="w-4 h-4"></i> New Loan Application
-            </a>
-        </div>
+    @endif
+
+    <x-page-header
+        eyebrow="Module"
+        title="Loans"
+        subtitle="Loan applications, credit decisions and the disbursed portfolio.">
+        <a href="{{ route('loans.defaulted') }}" class="h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 dark:bg-[#181824] dark:border-[#272738] dark:text-slate-200 inline-flex items-center gap-2 transition">
+            <x-icon name="alert-triangle" class="w-4 h-4"/> Defaulted instalments
+        </a>
+        <a href="{{ route('loans.create') }}" class="h-10 px-4 rounded-xl bg-[#38CE3C] hover:bg-[#2cb030] text-white text-sm font-semibold shadow-sm inline-flex items-center gap-2 transition">
+            <x-icon name="plus" class="w-4 h-4"/> New loan application
+        </a>
+    </x-page-header>
+
+    <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <x-stat-card label="Applications" :value="number_format($summary['total'])" meta="Matching the current filter" icon="file-text" tone="blue"/>
+        <x-stat-card label="Active portfolio" :value="'UGX '.number_format($summary['portfolio'], 2)" meta="Principal on disbursed loans" icon="credit-card" tone="purple"/>
+        <x-stat-card label="Pending decisions" :value="number_format($summary['pending'])" meta="Submitted or under review" icon="clock" tone="amber"/>
+        <x-stat-card label="Defaulted" :value="number_format($summary['defaulted'])" meta="Loans in default status" icon="alert-triangle" tone="coral"/>
     </div>
 
-    <!-- DATA TABLE -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden dark:bg-slate-900 dark:border-slate-800">
-        <div class="p-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">Loan Applications</h3>
-            <div class="relative">
-                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
-                <input type="text" placeholder="Search loans..." class="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-sacco/50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200">
-            </div>
-        </div>
-        
+    <x-panel title="Loan applications" subtitle="Newest applications first, fifteen per page." icon="credit-card">
+        <x-slot name="actions">
+            <form method="GET" action="{{ route('loans.index') }}" class="flex flex-wrap items-center gap-2 m-0">
+                <div class="relative">
+                    <x-icon name="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+                    <input type="search" name="q" value="{{ request('q') }}"
+                           placeholder="Search application or member..."
+                           class="h-10 w-full sm:w-64 pl-9 pr-3 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#38CE3C]/40 focus:border-[#38CE3C] transition dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100">
+                </div>
+                <button type="submit" class="h-10 px-4 rounded-xl bg-[#181824] text-white text-sm font-semibold hover:bg-slate-700 transition dark:bg-white dark:text-slate-900">Search</button>
+                @if(request('q'))
+                    <a href="{{ route('loans.index') }}" class="h-10 px-3 inline-flex items-center rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition dark:border-slate-700 dark:text-slate-300">Clear</a>
+                @endif
+            </form>
+        </x-slot>
+
         <div class="w-full overflow-x-auto">
-            <table class="w-full text-left text-sm whitespace-nowrap">
-                <thead>
-                    <tr class="bg-slate-50 dark:bg-slate-950/50 text-slate-500 text-xs uppercase tracking-wider">
-                        <th class="px-6 py-4 font-semibold">Application</th>
-                        <th class="px-6 py-4 font-semibold">Member</th>
-                        <th class="px-6 py-4 font-semibold">Principal</th>
-                        <th class="px-6 py-4 font-semibold">Rate</th>
-                        <th class="px-6 py-4 font-semibold">Term</th>
-                        <th class="px-6 py-4 font-semibold">Status</th>
-                        <th class="px-6 py-4 font-semibold text-right">Actions</th>
+            <table class="w-full text-left">
+                <thead class="bg-slate-50/50 dark:bg-slate-950/50">
+                    <tr class="border-b border-slate-100 dark:border-slate-800">
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Application</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Member</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Principal</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Rate</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Term</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                        <th class="h-11 px-5 text-[11px] font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                     @forelse($loans as $loan)
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition">
-                        <td class="px-6 py-4 font-medium text-sacco hover:underline cursor-pointer">
-                            <a href="{{ route('loans.show', $loan->id) }}">
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                        <td class="px-5 py-4">
+                            <a href="{{ route('loans.show', $loan->id) }}" class="text-sm font-semibold text-[#38CE3C] hover:underline">
                                 APP-{{ str_pad($loan->id, 4, '0', STR_PAD_LEFT) }}
                             </a>
                         </td>
-                        <td class="px-6 py-4 flex items-center gap-3">
-                            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold uppercase">
-                                {{ substr($loan->member->first_name ?? 'U', 0, 1) }}{{ substr($loan->member->last_name ?? '', 0, 1) }}
-                            </div>
-                            <div class="font-semibold text-slate-800 dark:text-slate-200">
-                                {{ $loan->member->first_name ?? 'Unknown' }} {{ $loan->member->last_name ?? '' }}
+                        <td class="px-5 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold uppercase">
+                                    {{ substr($loan->member->first_name ?? 'U', 0, 1) }}{{ substr($loan->member->last_name ?? '', 0, 1) }}
+                                </div>
+                                <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                                    {{ $loan->member->first_name ?? 'Unknown' }} {{ $loan->member->last_name ?? '' }}
+                                </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-200">UGX {{ number_format($loan->principal_amount, 2) }}</td>
-                        <td class="px-6 py-4 text-slate-600 dark:text-slate-400">{{ $loan->interest_rate }}%</td>
-                        <td class="px-6 py-4 text-slate-600 dark:text-slate-400">{{ $loan->term_months }} Months</td>
-                        <td class="px-6 py-4">
+                        <td class="px-5 py-4 text-sm font-semibold text-slate-700 dark:text-slate-200">UGX {{ number_format($loan->principal_amount, 2) }}</td>
+                        <td class="px-5 py-4 text-sm text-slate-600 dark:text-slate-400">{{ $loan->interest_rate }}%</td>
+                        <td class="px-5 py-4 text-sm text-slate-600 dark:text-slate-400">{{ $loan->term_months }} Months</td>
+                        <td class="px-5 py-4">
                             @php
                                 $statusClass = match($loan->status) {
                                     'approved', 'disbursed' => 'bg-[#38CE3C]/15 text-[#38CE3C] border border-[#38CE3C]/20',
@@ -72,14 +92,20 @@
                                 {{ ucfirst(str_replace('_', ' ', $loan->status)) }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-right">
-                            <a href="{{ route('loans.show', $loan->id) }}" class="text-slate-400 hover:text-sacco"><i data-lucide="eye" class="w-4 h-4 inline"></i></a>
+                        <td class="px-5 py-4 text-right whitespace-nowrap">
+                            <a href="{{ route('loans.show', $loan->id) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#38CE3C]/10 text-[#38CE3C] hover:bg-[#38CE3C]/20 transition">
+                                <x-icon name="eye" class="w-3.5 h-3.5"/>
+                                <span>View</span>
+                            </a>
                         </td>
                     </tr>
                     @empty
-                    <tr>
-                        <td colspan="7" class="px-6 py-8 text-center text-slate-500">No loans found in the database.</td>
-                    </tr>
+                        <x-empty-state colspan="7" icon="credit-card" title="No loans match this filter"
+                                       message="Try a different search term, or submit the first loan application.">
+                            <a href="{{ route('loans.create') }}" class="h-9 px-4 rounded-lg bg-[#38CE3C] text-white text-xs font-semibold inline-flex items-center gap-2 hover:bg-[#2cb030] transition">
+                                <x-icon name="plus" class="w-3.5 h-3.5"/> New loan application
+                            </a>
+                        </x-empty-state>
                     @endforelse
                 </tbody>
             </table>
@@ -90,6 +116,6 @@
             {{ $loans->links() }}
         </div>
         @endif
-    </div>
+    </x-panel>
 </div>
 @endsection

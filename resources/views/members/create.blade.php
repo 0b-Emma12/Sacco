@@ -45,6 +45,16 @@
                         <label class="block text-xs font-medium text-slate-500 mb-1">Date of Birth</label>
                         <input type="date" name="date_of_birth" value="{{ old('date_of_birth') }}" class="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-sacco outline-none" required>
                     </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Gender</label>
+                        <select name="gender" class="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-sacco outline-none bg-white" required>
+                            <option value="">Select gender...</option>
+                            @foreach(['MALE', 'FEMALE', 'OTHER'] as $gender)
+                                <option value="{{ $gender }}" {{ old('gender') === $gender ? 'selected' : '' }}>{{ ucfirst(strtolower($gender)) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Identity & Contact -->
@@ -80,6 +90,23 @@
                     <div>
                         <label class="block text-xs font-medium text-slate-500 mb-1">City</label>
                         <input type="text" name="city" value="{{ old('city') }}" class="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-sacco outline-none" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Common Bond Type</label>
+                        <select name="common_bond_type" class="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-sacco outline-none bg-white">
+                            @foreach(['EMPLOYER' => 'Employer', 'PROFESSION' => 'Profession', 'COMMUNITY' => 'Community', 'CHAMA' => 'Chama / Group'] as $value => $label)
+                                <option value="{{ $value }}" {{ old('common_bond_type', 'COMMUNITY') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Common Bond (employer, group, community)</label>
+                        <input type="text" name="common_bond_value" value="{{ old('common_bond_value') }}" class="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-sacco outline-none">
+                    </div>
+                    <div class="flex items-end">
+                        <p class="text-xs text-slate-500 leading-relaxed">KYC starts as <strong>Pending</strong>. Complete the M02 verification on the member profile once the National ID, photo, address and common-bond documents are on file.</p>
                     </div>
                 </div>
             </div>
